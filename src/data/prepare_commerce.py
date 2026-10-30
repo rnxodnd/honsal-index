@@ -5,6 +5,7 @@
 
 import argparse
 import hashlib
+import io
 import json
 from pathlib import Path
 
@@ -17,8 +18,24 @@ OUTPUT_DIR = PROJECT_DIR / "data/processed"
 RULE_PATH = PROJECT_DIR / "config/commerce_categories.json"
 SOURCE_FILE = "소상공인시장진흥공단_상가(상권)정보_강원_202609.csv"
 SOURCE_SHA256 = "48ec49f65e254b6abd4f069b7977b99afe2c9a2081bfb7486ddee9ad444efd22"
+SOURCE_CANONICAL_SHA256 = "2a2413200eee20dcdd54875353443349187d130166a48aed0fd65e47c1f516ce"
 EXPORT_COLUMNS = ["상가업소번호", "상호명", "업종", "업종소분류명", "경도", "위도", "전화번호", "주소"]
 CATEGORY_LABELS = {"daily_life": "편의시설", "leisure_community": "여가시설"}
+
+
+def default_source_path() -> Path:
+    """개인 원본이 있으면 사용하고, 없으면 Git에 공유된 동일 자료를 사용합니다."""
+    return RAW_PATH if RAW_PATH.is_file() else PROJECT_DIR / SOURCE_FILE
+
+
+def load_source(path: Path) -> tuple[pd.DataFrame, str]:
+    """Git 줄바꿈 변환만 허용하고 검증한 바이트에서 CSV와 실제 해시를 읽습니다."""
+    content = path.read_bytes()
+    canonical = content.replace(b"\r\n", b"\n")
+    if hashlib.sha256(canonical).hexdigest() != SOURCE_CANONICAL_SHA256:
+        raise ValueError("검증한 202609 원본과 내용이 다릅니다. 기준월과 업종 분류표를 확인하세요.")
+    digest = hashlib.sha256(content).hexdigest()
+    return pd.read_csv(io.BytesIO(content), encoding="utf-8-sig", dtype="string"), digest
 
 
 def load_rules(path: Path = RULE_PATH) -> pd.DataFrame:
@@ -35,7 +52,9 @@ def load_rules(path: Path = RULE_PATH) -> pd.DataFrame:
     return rules
 
 
-def classify_commerce(source: pd.DataFrame, rules: pd.DataFrame | None = None) -> pd.DataFrame:
+def classify_commerce(
+    source: pd.DataFrame, rules: pd.DataFrame | None = None, *, source_sha256: str = SOURCE_SHA256,
+) -> pd.DataFrame:
     rules = load_rules() if rules is None else rules
     required = [
         "상가업소번호", "상호명", "상권업종소분류코드", "상권업종소분류명",
@@ -102,22 +121,23 @@ def classify_commerce(source: pd.DataFrame, rules: pd.DataFrame | None = None) -
     result["source_url"] = "https://www.data.go.kr/data/15083033/fileData.do"
     result["data_date"] = "2026-09"  # 제공된 파일명의 기준월. 특정 날짜로 추정하지 않습니다.
     result["data_date_precision"] = "month"
-    result["source_sha256"] = SOURCE_SHA256
+    result["source_sha256"] = source_sha256
     return result.sort_values(["analysis_category", "analysis_subtype", "facility_id"]).reset_index(drop=True)
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--input", type=Path, default=RAW_PATH, help="제공받은 202609 강원 원본 CSV")
+    parser.add_argument("--input", type=Path, default=default_source_path(),
+                        help="202609 강원 원본 CSV (생략 시 개인 원본, 없으면 저장소 루트의 공유 원본)")
     parser.add_argument("--output-dir", type=Path, default=OUTPUT_DIR)
     args = parser.parse_args()
     if not args.input.is_file():
         parser.error(f"원본이 없습니다: {args.input}\n--input '원본 경로'를 지정하세요.")
-    digest = hashlib.sha256(args.input.read_bytes()).hexdigest()
-    if digest != SOURCE_SHA256:
-        parser.error("검증한 202609 원본과 내용이 다릅니다. 기준월과 업종 분류표를 확인하세요.")
-    source = pd.read_csv(args.input, encoding="utf-8-sig", dtype="string")
-    result = classify_commerce(source)
+    try:
+        source, digest = load_source(args.input)
+    except ValueError as error:
+        parser.error(str(error))
+    result = classify_commerce(source, source_sha256=digest)
     outputs = {
         "chuncheon_daily_life.csv": result.loc[result.analysis_category.eq("daily_life"), EXPORT_COLUMNS],
         "chuncheon_leisure.csv": result.loc[result.analysis_category.eq("leisure_community"), EXPORT_COLUMNS],

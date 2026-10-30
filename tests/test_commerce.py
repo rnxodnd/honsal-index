@@ -1,10 +1,15 @@
 """상권 분류의 지역·업종 경계와 결측값 처리를 검증합니다."""
 
 import unittest
+import hashlib
+from pathlib import Path
+import tempfile
+from unittest.mock import patch
 
 import pandas as pd
 
-from src.data.prepare_commerce import classify_commerce
+from src.data import prepare_commerce
+from src.data.prepare_commerce import classify_commerce, default_source_path, load_source
 
 
 def shop(identifier="test:1", code="R10202", subtype="독서실/스터디 카페", **changes):
@@ -19,6 +24,42 @@ def shop(identifier="test:1", code="R10202", subtype="독서실/스터디 카페
 
 
 class CommerceTests(unittest.TestCase):
+    def test_source_loader_accepts_line_endings_but_rejects_changed_values(self):
+        # 검증 전용 소형 CSV. 두 파일은 줄바꿈만 다르며 변경된 값은 거절해야 합니다.
+        lf = "\ufeff상가업소번호,상호명\nshop:1,테스트 업소\n".encode("utf-8")
+        crlf = lf.replace(b"\n", b"\r\n")
+        expected_hash = hashlib.sha256(lf).hexdigest()
+        with tempfile.TemporaryDirectory() as directory, patch.object(
+            prepare_commerce, "SOURCE_CANONICAL_SHA256", expected_hash,
+        ):
+            path = Path(directory) / "shops.csv"
+            path.write_bytes(lf)
+            first, first_hash = load_source(path)
+            path.write_bytes(crlf)
+            second, second_hash = load_source(path)
+            pd.testing.assert_frame_equal(first, second)
+            self.assertEqual(first_hash, hashlib.sha256(lf).hexdigest())
+            self.assertEqual(second_hash, hashlib.sha256(crlf).hexdigest())
+            self.assertNotEqual(first_hash, second_hash)
+            path.write_bytes(lf.replace(b"shop:1", b"shop:2"))
+            with self.assertRaisesRegex(ValueError, "내용이 다릅니다"):
+                load_source(path)
+
+    def test_default_source_falls_back_to_shared_file_and_records_input_hash(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            private = root / "data/raw/gangwon_commerce_202609.csv"
+            shared = root / prepare_commerce.SOURCE_FILE
+            shared.write_text("shared fixture", encoding="utf-8")
+            with patch.multiple(prepare_commerce, PROJECT_DIR=root, RAW_PATH=private):
+                self.assertEqual(default_source_path(), shared)
+                private.parent.mkdir(parents=True)
+                private.write_text("private fixture", encoding="utf-8")
+                self.assertEqual(default_source_path(), private)
+        actual_hash = hashlib.sha256(b"fixture").hexdigest()
+        result = classify_commerce(pd.DataFrame([shop()]), source_sha256=actual_hash)
+        self.assertEqual(result.source_sha256.tolist(), [actual_hash])
+
     def test_exact_codes_select_chuncheon_and_preserve_source_name(self):
         source = pd.DataFrame([
             shop(), shop("other-city", 시군구명="원주시", 시군구코드="51130"),

@@ -3,7 +3,7 @@
 const startButton = document.getElementById("startBtn");
 
 // 지도 영역
-const mapSection = document.getElementById("mapSection");
+const mapSection = document.getElementById("map");
 
 // 지역 이름과 설명
 const regionName = document.getElementById("regionName");

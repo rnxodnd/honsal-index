@@ -111,6 +111,25 @@ class ApiTests(unittest.IsolatedAsyncioTestCase):
         status, _ = await request(self.app, "/data/processed/chuncheon_facilities_classified.csv")
         self.assertEqual(status, 404)
 
+    async def test_existing_grid_ui_can_load_only_its_explicit_input_files(self):
+        for filename, expected_header in (
+            ("grid_500m_bounds.csv", "grid_id"),
+            ("chuncheon_medical_facilities.csv", "facility_id"),
+        ):
+            with self.subTest(filename=filename):
+                status, body = await request(self.app, f"/data/{filename}")
+                self.assertEqual(status, 200)
+                self.assertIn(expected_header, body.decode("utf-8-sig").splitlines()[0].split(","))
+        status, _ = await request(self.app, "/data/chuncheon_facilities_classified.csv")
+        self.assertEqual(status, 404)
+
+    async def test_api_only_entry_does_not_enable_ui_csv_routes(self):
+        app = create_app(FixtureEngine(), serve_ui=False)
+        for path in ("/", "/data/grid_500m_bounds.csv", "/data/chuncheon_medical_facilities.csv"):
+            with self.subTest(path=path):
+                status, _ = await request(app, path)
+                self.assertEqual(status, 404)
+
 
 if __name__ == "__main__":
     unittest.main()

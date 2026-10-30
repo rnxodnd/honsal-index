@@ -11,7 +11,7 @@ from pathlib import Path
 from starlette.applications import Starlette
 from starlette.concurrency import run_in_threadpool
 from starlette.exceptions import HTTPException
-from starlette.responses import JSONResponse
+from starlette.responses import FileResponse, JSONResponse
 from starlette.routing import Mount, Route
 from starlette.staticfiles import StaticFiles
 
@@ -128,6 +128,17 @@ def create_app(engine=None, project_dir: Path = PROJECT_DIR, *, serve_ui: bool =
         ]),
     ]
     if serve_ui:
+        async def ui_data(request):
+            # 기존 격자·의료 선택 화면에서 사용하는 파일만 명시적으로 제공합니다.
+            filename = request.path_params["filename"]
+            if filename not in {"grid_500m_bounds.csv", "chuncheon_medical_facilities.csv"}:
+                raise HTTPException(404)
+            path = project_dir / "data" / "processed" / filename
+            if not path.is_file():
+                raise HTTPException(404)
+            return FileResponse(path, media_type="text/csv; charset=utf-8")
+
+        routes.append(Route("/data/{filename}", ui_data, methods=["GET"]))
         routes.append(Mount("/", app=StaticFiles(directory=project_dir / "app/app", html=True)))
     application = Starlette(
         routes=routes,

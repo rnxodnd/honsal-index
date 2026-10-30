@@ -18,3 +18,5 @@ data/processed/*
 !data/processed/chuncheon_hospitals.csv
 !data/processed/chuncheon_pharmacies.csv
 !data/processed/chuncheon_medical_facilities.csv
+!data/processed/grid_500m_filtered.csv
+!data/processed/grid_500m_filtered.geojson

@@ -98,12 +98,21 @@ def save(cells: gpd.GeoDataFrame, size: int) -> None:
     grid_ll.to_file(f"{base}.geojson", driver="GeoJSON")
     cells[cols].to_csv(f"{base}.csv", index=False, encoding="utf-8-sig")
 
-    m = folium.Map(location=[cells["lat"].mean(), cells["lon"].mean()], zoom_start=11)
+    m = folium.Map(location=[cells["lat"].mean(), cells["lon"].mean()], zoom_start=11, tiles=None)
+    esri = "https://server.arcgisonline.com/ArcGIS/rest/services/{}/MapServer/tile/{{z}}/{{y}}/{{x}}"
+    # 일반 지도: 한국은 고배율 타일이 없어 13단계까지만 받고 그 이상은 늘려서 표시
+    folium.TileLayer(esri.format("World_Street_Map"), attr="Tiles © Esri", name="일반 지도",
+                     max_native_zoom=13, max_zoom=19).add_to(m)
+    # 위성 지도: 한국도 고배율 이미지가 있어 크게 확대해도 선명함
+    folium.TileLayer(esri.format("World_Imagery"), attr="Tiles © Esri", name="위성 지도",
+                     max_native_zoom=18, max_zoom=19).add_to(m)
     folium.GeoJson(
         grid_ll,
+        name="격자",
         style_function=lambda f: {"color": "#2563eb", "weight": 0.5, "fillOpacity": 0.05},
         tooltip=folium.GeoJsonTooltip(fields=["grid_id", "adm_nm"], aliases=["격자", "행정동"]),
     ).add_to(m)
+    folium.LayerControl().add_to(m)  # 오른쪽 위에서 지도 종류 선택
     m.save(f"{base}_preview.html")
 
     print(f"격자 {len(cells):,}개 생성 → {base}.geojson / .csv / _preview.html")

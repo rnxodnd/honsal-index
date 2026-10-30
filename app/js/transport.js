@@ -109,7 +109,7 @@
     scopedStops.forEach(stop => {
       const button = element(
         "button",
-        "버스",
+        "🚏",
         "bus-map-marker"
       );
 
@@ -139,8 +139,9 @@
         ),
         content: button,
         clickable: true,
-        yAnchor: 1,
-        zIndex: 5
+        yAnchor: 0.5,
+        // 시설 핀(zIndex 4) 아래에 깔고, 선택한 정류장만 위로 올립니다.
+        zIndex: activeStop === stop.id ? 6 : 3
       });
 
       overlays.push({
@@ -488,7 +489,7 @@
           "small",
           `정류장 ID ${visit.id} · ${
             inside
-              ? "3×3 생활권 안"
+              ? "1.5km × 1.5km 영역 안"
               : "생활권 밖 또는 범위 확인 전"
           }`
         )
@@ -507,6 +508,7 @@
           window.HonsalUI.switchView("explore");
 
           $("showBusStops").checked = true;
+          $("mapBusToggle").checked = true;
 
           renderMarkers();
           window.HonsalMap.relayout();
@@ -720,8 +722,26 @@
 
   $("showBusStops").addEventListener(
     "change",
-    refresh
+    () => {
+      // 지도 위 체크박스와 같은 상태로 맞춥니다.
+      $("mapBusToggle").checked = $("showBusStops").checked;
+      refresh();
+    }
   );
+
+  $("mapBusToggle").checked = $("showBusStops").checked;
+  // 지도를 많이 축소하면(레벨 6 이상) 정류장을 작은 점으로만 표시합니다.
+  const applyBusZoom = () => {
+    const level = window.HonsalMap?.getLevel?.();
+    if (level) $("map").classList.toggle("bus-far", level >= 6);
+  };
+  document.addEventListener("honsal:zoom", applyBusZoom);
+  document.addEventListener("honsal:ready", applyBusZoom);
+
+  $("mapBusToggle").addEventListener("change", () => {
+    $("showBusStops").checked = $("mapBusToggle").checked;
+    refresh();
+  });
 
   $("transportRetry").addEventListener("click", () => {
     if (

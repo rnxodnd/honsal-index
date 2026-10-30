@@ -57,6 +57,7 @@
     analysisMarkers = [];
     analysisLabels.forEach(item => item.setMap(null));
     analysisLabels = [];
+    showLegend(false);
     if (analysisInfo) analysisInfo.close();
     analysisInfo = null;
   }
@@ -67,6 +68,68 @@
     if (ready) {
       put("mapStatus", "지도에서 위치를 선택하면 주소와 주변 장소를 확인할 수 있습니다.");
     }
+  }
+
+  // 시설 마커: 카테고리별 색 + 시설 종류별 이모지
+  const CATEGORY_STYLE = {
+    daily_life: { label: "편의시설", color: "#f08c00", icon: "🏪" },
+    leisure_community: { label: "여가시설", color: "#7c4dff", icon: "🎯" },
+    healthcare: { label: "의료시설", color: "#e03131", icon: "🏥" },
+    transport: { label: "교통", color: "#0c8f5a", icon: "🚌" }
+  };
+  const SUBTYPE_ICON = {
+    "독서실/스터디카페": "📚", "목욕탕/사우나": "♨️", "문구/회화용품 소매업": "✏️",
+    "미용실": "💇", "복사업": "🖨️", "세탁소": "👔", "셀프 빨래방": "🧺",
+    "슈퍼마켓": "🛒", "자동차 대여업": "🚗", "편의점": "🏪", "화장품 소매업": "💄",
+    "병원": "🏥", "보건소": "⛑️", "보건지소": "⛑️", "보건진료소": "⛑️", "약국": "💊",
+    "요양병원": "🛏️", "의원": "🩺", "정신병원": "🧠", "종합병원": "🏥",
+    "치과의원": "🦷", "한방병원": "🌿", "한의원": "🌿",
+    "PC방": "🖥️", "골프 연습장": "⛳", "기타 오락장": "🎯", "낚시터 운영업": "🎣",
+    "노래방": "🎤", "당구장": "🎱", "바둑/장기/체스 경기 운영업": "♟️", "볼링장": "🎳",
+    "수상/해양 레저업": "🚤", "수영장": "🏊", "스쿼시/라켓볼장": "🏸",
+    "전자 게임장": "🎮", "탁구장": "🏓", "테니스장": "🎾", "헬스장": "🏋️",
+    "버스정류장": "🚌", "철도역": "🚆"
+  };
+  const MIXED_STYLE = { label: "여러 종류", color: "#5c6b66", icon: "📍" };
+
+  function facilityPin(group) {
+    const categories = new Set(group.map(item => item.category));
+    const subtypes = new Set(group.map(item => item.subtype));
+    const style = categories.size === 1
+      ? (CATEGORY_STYLE[group[0].category] || MIXED_STYLE)
+      : MIXED_STYLE;
+    const icon = categories.size === 1 && subtypes.size === 1
+      ? (SUBTYPE_ICON[group[0].subtype] || style.icon)
+      : style.icon;
+    const pin = node("div", "", "facility-pin");
+    pin.style.setProperty("--pin-color", style.color);
+    pin.title = group.length > 1
+      ? `같은 위치의 시설 ${group.length}곳: ${group.map(item => item.name).join(", ")}`
+      : `${group[0].name} · ${group[0].subtype}`;
+    pin.setAttribute("role", "button");
+    pin.setAttribute("aria-label", pin.title);
+    pin.append(node("span", icon, "facility-pin-icon"));
+    if (group.length > 1) pin.append(node("span", String(group.length), "facility-pin-count"));
+    return pin;
+  }
+
+  let legend = null;
+  function showLegend(visible) {
+    if (!legend) {
+      const frame = document.getElementById("map")?.parentElement;
+      if (!frame) return;
+      legend = node("div", "", "facility-legend");
+      legend.setAttribute("aria-label", "시설 마커 범례");
+      [...Object.values(CATEGORY_STYLE), MIXED_STYLE].forEach(style => {
+        const item = node("span", "", "facility-legend-item");
+        const dot = node("i", "");
+        dot.style.background = style.color;
+        item.append(dot, document.createTextNode(style.label));
+        legend.append(item);
+      });
+      frame.append(legend);
+    }
+    legend.hidden = !visible;
   }
 
   function facilityBubble(facilities) {
@@ -88,7 +151,7 @@
       item.append(heading, node("div", facility.subtype));
       item.append(node("div", facility.address || "주소 정보 없음"));
       if (Number.isFinite(facility.distance_m)) {
-        item.append(node("div", `격자 중심 직선거리 ${facility.distance_m.toLocaleString("ko-KR", { maximumFractionDigits: 1 })}m`));
+        item.append(node("div", `선택 지점 직선거리 ${facility.distance_m.toLocaleString("ko-KR", { maximumFractionDigits: 1 })}m`));
       }
       item.append(phoneElement(facility.phone));
       if (facility.in_city_boundary === false) {
@@ -121,40 +184,32 @@
     try {
       locations.forEach(group => {
         const first = group[0];
-        const facilityMarker = new kakao.maps.Marker({
-          map,
-          position: new kakao.maps.LatLng(first.lat, first.lon),
-          title: group.length > 1
-            ? `같은 위치의 시설 ${group.length}곳: ${group.map(item => item.name).join(", ")}`
-            : `${first.name} · ${first.subtype}`,
-          zIndex: 4
-        });
-        kakao.maps.event.addListener(facilityMarker, "click", () => {
+        const position = new kakao.maps.LatLng(first.lat, first.lon);
+        const content = facilityPin(group);
+        content.addEventListener("click", event => {
+          event.stopPropagation();
           if (analysisInfo) analysisInfo.close();
           if (info) info.close();
           analysisInfo = new kakao.maps.InfoWindow({
+            position,
             content: facilityBubble(group),
             removable: true,
             zIndex: 6
           });
-          analysisInfo.open(map, facilityMarker);
+          analysisInfo.open(map);
         });
-        analysisMarkers.push(facilityMarker);
-        if (group.length > 1) {
-          const count = node("span", String(group.length), "analysis-marker-count");
-          count.style.cssText = "display:block;min-width:20px;height:20px;padding:0 4px;box-sizing:border-box;border:2px solid #fff;border-radius:10px;background:#117c56;color:#fff;font:600 11px/16px sans-serif;text-align:center;pointer-events:none;";
-          count.setAttribute("aria-label", `같은 위치의 시설 ${group.length}곳`);
-          analysisLabels.push(new kakao.maps.CustomOverlay({
-            map,
-            position: new kakao.maps.LatLng(first.lat, first.lon),
-            content: count,
-            xAnchor: 0.5,
-            yAnchor: 2.6,
-            zIndex: 5
-          }));
-        }
+        analysisMarkers.push(new kakao.maps.CustomOverlay({
+          map,
+          position,
+          content,
+          xAnchor: 0.5,
+          yAnchor: 1,
+          clickable: true,
+          zIndex: 4
+        }));
       });
-      put("mapStatus", `주변 3×3 격자의 선택 시설 ${facilities.length.toLocaleString("ko-KR")}곳 · 같은 좌표의 시설은 마커를 눌러 모두 확인할 수 있습니다.`);
+      showLegend(true);
+      put("mapStatus", `1.5km × 1.5km 영역 내 선택 시설 ${facilities.length.toLocaleString("ko-KR")}곳 · 같은 좌표의 시설은 마커를 눌러 모두 확인할 수 있습니다.`);
       return true;
     } catch (error) {
       removeAnalysisLayers();
@@ -720,6 +775,15 @@
       );
     },
 
+    getLevel() {
+      return ready ? map.getLevel() : null;
+    },
+
+    setLevel(level) {
+      if (!ready) return;
+      map.setLevel(Math.max(1, Math.min(14, Math.round(level))));
+    },
+
     relayout() {
       if (!ready) return;
 
@@ -793,6 +857,13 @@
       map = new kakao.maps.Map($("map"), {
         center,
         level: 5
+      });
+
+      // 줌 슬라이더가 현재 지도 확대 수준을 따라가도록 알립니다.
+      kakao.maps.event.addListener(map, "zoom_changed", () => {
+        document.dispatchEvent(new CustomEvent("honsal:zoom", {
+          detail: { level: map.getLevel() }
+        }));
       });
 
       marker = new kakao.maps.Marker({

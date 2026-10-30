@@ -68,13 +68,35 @@ class AccessibilityTests(unittest.TestCase):
         leisure_category = next(x for x in leisure_only["categories"] if x["key"] == "leisure_community")
         self.assertEqual(leisure_category["weight"], 1.0)
 
-    def test_distances_are_from_grid_center_and_not_query_point(self):
+    def test_distances_are_from_selected_point_within_same_grid(self):
         engine = make_engine([facility("bus", 400, 250)])
         center = engine.analyze(*point(), {"transport": ["버스정류장"]})
         on_facility = engine.analyze(*point(400, 250), {"transport": ["버스정류장"]})
-        self.assertEqual(center["total_score"], on_facility["total_score"])
-        self.assertEqual(on_facility["types"][0]["nearest"]["distance_m"], 150.0)
-        self.assertEqual(on_facility["scoring"]["distance_basis"], "grid_center_straight_line")
+        # 같은 격자 안이라도 누른 지점에 따라 거리와 점수가 달라집니다.
+        self.assertEqual(center["types"][0]["nearest"]["distance_m"], 150.0)
+        self.assertEqual(center["total_score"], 80.0)
+        self.assertEqual(on_facility["types"][0]["nearest"]["distance_m"], 0.0)
+        self.assertEqual(on_facility["total_score"], 100.0)
+        self.assertEqual(center["grid"]["grid_id"], on_facility["grid"]["grid_id"])
+        self.assertEqual(on_facility["scoring"]["distance_basis"], "selected_point_straight_line")
+
+    def test_facility_outside_3x3_but_within_750m_of_point_counts_for_score(self):
+        # 격자(0~500m) 동쪽 끝을 누르면 3×3(최대 1000m) 밖 1100m 지점 시설이 610m 거리입니다.
+        engine = make_engine([facility("beyond", 1100, 250)])
+        result = engine.analyze(*point(490, 250), {"transport": ["버스정류장"]})
+        row = result["types"][0]
+        self.assertEqual(row["nearest"]["facility_id"], "beyond")
+        self.assertAlmostEqual(row["nearest"]["distance_m"], 610.0, places=1)
+        self.assertFalse(row["nearest"]["in_neighborhood"])
+        self.assertEqual(row["status"], "available")
+        self.assertEqual(row["count_3x3"], 0)
+        self.assertEqual(row["count_within_radius"], 1)
+        self.assertAlmostEqual(result["total_score"], 100 * (1 - 610 / 750), places=1)
+        # 화면 목록은 기존처럼 3×3 범위만 보냅니다.
+        self.assertEqual(result["facilities"], [])
+        # 격자 중심(750m보다 먼 850m)에서는 여전히 시설 없음입니다.
+        center = engine.analyze(*point(), {"transport": ["버스정류장"]})
+        self.assertEqual(center["types"][0]["status"], "no_facility_in_neighborhood")
 
     def test_neighbor_non_candidate_and_outside_city_facilities_are_kept(self):
         engine = make_engine([

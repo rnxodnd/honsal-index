@@ -102,6 +102,9 @@ def neighbors_3x3(grid_id, size=500):
 
 - `src/make_grid.py`: 춘천 500m 격자 생성 → `data/processed/grid_500m.*`
 - `src/filter_grid.py`: SGIS 1km 인구 기준 거주 격자 필터링 → `data/processed/grid_500m_filtered.*` (인구·가구·1인가구는 1km 격자 값)
+- `src/locate.py`: 주소·장소명 → 좌표·중심 격자·주변 3×3 격자 ID. 실제 주소 검색에는 로컬 카카오 키가 필요합니다.
+
+공유 격자 2,526개의 재사용·재생성 방법, SGIS 원본 미포함과 기존 0값의 해석 한계는 [격자 데이터 안내](grid-data.md)를 참고합니다. 1km 통계를 500m 격자마다 합산하지 않습니다.
 
 ## 다음 작업
 

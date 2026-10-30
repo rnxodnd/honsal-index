@@ -206,4 +206,5 @@ VS Code에서는 프로젝트 폴더를 연 뒤 명령 팔레트의 **Python: Se
 - [팀 역할 분담](docs/team-roles.md)
 - [폴더 이용 가이드](docs/folder-guide.md)
 - [시설 선택과 분석 규칙](docs/facility-selection.md)
+- [격자·주소 조회와 데이터 안내](docs/grid-data.md)
 - [원본 기획안](docs/혼살지수_1인가구_생활편의점수_시스템.pdf)

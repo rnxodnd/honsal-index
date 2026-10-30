@@ -151,7 +151,7 @@
       item.append(heading, node("div", facility.subtype));
       item.append(node("div", facility.address || "주소 정보 없음"));
       if (Number.isFinite(facility.distance_m)) {
-        item.append(node("div", `격자 중심 직선거리 ${facility.distance_m.toLocaleString("ko-KR", { maximumFractionDigits: 1 })}m`));
+        item.append(node("div", `선택 지점 직선거리 ${facility.distance_m.toLocaleString("ko-KR", { maximumFractionDigits: 1 })}m`));
       }
       item.append(phoneElement(facility.phone));
       if (facility.in_city_boundary === false) {

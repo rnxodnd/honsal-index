@@ -1,4 +1,4 @@
-"""춘천 500m 격자의 선택 시설 접근성: 격자 중심 직선거리, 750m 선형 점수.
+"""춘천 500m 격자의 선택 시설 접근성: 선택 지점 직선거리, 750m 선형 점수.
 
 원본 분류 자료를 검증하고 서버 시작 시 격자를 배정합니다. 미리 생성한 집계
 CSV에 의존하지 않으며, 후보 격자 밖 시설도 주변 3×3 검색에 포함합니다.
@@ -31,7 +31,7 @@ LABELS = {
 }
 SCORING = {
     "method": "linear_nearest_distance", "max_distance_m": 750,
-    "distance_basis": "grid_center_straight_line",
+    "distance_basis": "selected_point_straight_line",
 }
 
 
@@ -141,13 +141,26 @@ class AccessibilityEngine:
         selection = available_facility_types(chosen)
         grid = self.grids.loc[grid_id]
         center_x, center_y = float(grid.x_center), float(grid.y_center)
+        # 검색 범위는 선택 지점이 속한 격자 기준 3×3, 거리는 사용자가 누른 지점부터 잽니다.
+        point_x, point_y = TO_METERS.transform(lon, lat, errcheck=True)
         neighbors = neighbors_3x3(grid_id)
         nearby = chosen.loc[chosen.grid_id.isin(neighbors)].copy()
-        distances = np.hypot(nearby._x - center_x, nearby._y - center_y)
+        distances = np.hypot(nearby._x - point_x, nearby._y - point_y)
         # 좌표계 왕복 변환의 부동소수점 오차만 보정합니다(1 마이크로미터).
         distances = np.where(np.abs(distances - MAX_DISTANCE_M) < 1e-6, MAX_DISTANCE_M, distances)
         nearby["distance_m"] = np.where(np.abs(distances) < 1e-6, 0.0, distances)
         nearby = nearby.sort_values(["distance_m", "facility_id"])
+
+        # 점수용: 3×3 밖이라도 선택 지점 반경 750m 안의 시설은 가장 가까운 시설 후보로 인정합니다.
+        # (가장자리를 눌러도 불리하지 않게) 화면의 시설 목록·개수는 기존 3×3 범위를 유지합니다.
+        all_distances = np.hypot(chosen._x - point_x, chosen._y - point_y)
+        all_distances = np.where(np.abs(all_distances - MAX_DISTANCE_M) < 1e-6, MAX_DISTANCE_M, all_distances)
+        in_radius = chosen.loc[all_distances <= MAX_DISTANCE_M].copy()
+        in_radius["distance_m"] = np.where(
+            np.abs(all_distances[all_distances <= MAX_DISTANCE_M]) < 1e-6, 0.0,
+            all_distances[all_distances <= MAX_DISTANCE_M],
+        )
+        neighbor_ids = set(nearby.facility_id.astype(str))
 
         def facility_json(row):
             return {
@@ -165,21 +178,27 @@ class AccessibilityEngine:
                 matches = nearby.loc[
                     nearby.analysis_category.eq(category) & nearby.analysis_subtype.eq(subtype)
                 ]
+                radius_matches = in_radius.loc[
+                    in_radius.analysis_category.eq(category) & in_radius.analysis_subtype.eq(subtype)
+                ]
+                candidates = pd.concat([matches, radius_matches]).drop_duplicates("facility_id")
+                candidates = candidates.sort_values(["distance_m", "facility_id"])
                 nearest, score, status = None, 0.0, "no_facility_in_neighborhood"
-                if not matches.empty:
-                    first = matches.iloc[0]
+                if not candidates.empty:
+                    first = candidates.iloc[0]
                     distance = float(first.distance_m)
                     score = max(0.0, 100.0 * (1.0 - distance / MAX_DISTANCE_M))
                     # 정확히 750m도 0점입니다. 반경 내 개수는 경계점을 포함합니다.
                     status = "available" if distance < MAX_DISTANCE_M else "outside_scoring_radius"
                     nearest = {key: value for key, value in facility_json(first).items()
                                if key in ("facility_id", "name", "lat", "lon", "distance_m")}
+                    nearest["in_neighborhood"] = str(first.facility_id) in neighbor_ids
                 score_rows.append({"grid_id": grid_id, "analysis_category": category,
                                    "analysis_subtype": subtype, "score": score})
                 types.append({
                     "category": category, "subtype": subtype, "score": round(score, 2),
                     "nearest": nearest, "count_3x3": len(matches),
-                    "count_within_radius": int(matches.distance_m.le(MAX_DISTANCE_M).sum()),
+                    "count_within_radius": int(candidates.distance_m.le(MAX_DISTANCE_M).sum()),
                     "status": status,
                 })
 
@@ -189,8 +208,8 @@ class AccessibilityEngine:
             center_x - 750, center_y - 750, center_x + 750, center_y + 750, densify_pts=21,
         )
         notices = [
-            "거리는 검색 위치가 속한 500m 격자의 중심부터 잰 직선거리이며, 도보 거리나 시간이 아닙니다.",
-            "주변 3×3 격자에서 선택 유형별 가장 가까운 시설을 찾고, 750m에서 0점이 되는 선형 점수를 계산합니다.",
+            "거리는 지도에서 선택한 지점부터 잰 직선거리이며, 도보 거리나 시간이 아닙니다.",
+            "선택 지점 반경 750m(3×3 격자 밖 포함)에서 선택 유형별 가장 가까운 시설을 찾고, 750m에서 0점이 되는 선형 점수를 계산합니다.",
             "각 항목은 선택 유형 점수의 평균입니다. 선택하지 않은 항목의 가중치는 나머지 항목에 비례하여 재분배됩니다.",
             "주변 시설 없음은 확보한 데이터 기준이며, 실제 시설의 부재를 보장하지 않습니다.",
         ]

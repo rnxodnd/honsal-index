@@ -60,7 +60,7 @@
     document.querySelector(".score-circle").classList.remove("is-ready");
     $("analysisState").textContent = status === "error" ? "분석 오류" : status === "loading" ? "분석 중" : "시설 선택 대기";
     $("analysisTitle").textContent = status === "error" ? "분석 결과를 확인할 수 없습니다" : status === "loading" ? "선택한 시설 분석 중" : "시설을 선택해 주세요";
-    $("analysisDescription").textContent = "점수는 격자 중심에서 시설까지의 직선거리로 계산합니다.";
+    $("analysisDescription").textContent = "점수는 선택한 지점에서 시설까지의 직선거리로 계산합니다.";
     $("analysisStatus").textContent = message;
     $("analysisStatus").classList.toggle("is-error", status === "error");
     $("localDataSection").setAttribute("aria-busy", String(status === "loading"));
@@ -90,7 +90,7 @@
     top.append(name, node("span", facility.subtype, "poi-type"));
     card.append(top, node("div", facility.address || "주소 정보 없음", "poi-address"));
     const meta = node("div", undefined, "poi-meta");
-    meta.append(node("span", `격자 중심 직선거리 ${Math.round(facility.distance_m).toLocaleString("ko-KR")}m`));
+    meta.append(node("span", `선택 지점 직선거리 ${Math.round(facility.distance_m).toLocaleString("ko-KR")}m`));
     card.append(meta);
     card.append(node("small", facility.phone ? `전화번호 ${facility.phone}` : "전화번호 정보 없음", "facility-phone"));
     if (facility.in_city_boundary === false) card.append(node("small", "춘천 행정경계 밖의 인근 시설", "facility-boundary-note"));

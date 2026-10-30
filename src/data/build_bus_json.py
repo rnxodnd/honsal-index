@@ -11,6 +11,7 @@ app/js/transport.js 가 읽는 형식(version 1: meta·stops·routes)으로 변�
 from __future__ import annotations
 
 import json
+import re
 import sys
 from collections import Counter, defaultdict
 from datetime import datetime
@@ -19,6 +20,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 RAW = ROOT / "data" / "raw" / "bus_routes_15060075.json"
 OUT = ROOT / "app" / "data" / "chuncheon_bus.json"
+# 원본에서 엑셀이 '10-1' 같은 노선번호를 날짜('10월 01일')로 바꿔 놓은 경우를 되돌린다.
+DATE_LIKE = re.compile(r"^0?(\d{1,2})월\s*0?(\d{1,2})일(.*)$")
+
+
+def fix_number(value) -> str:
+    text = str(value).strip()
+    match = DATE_LIKE.match(text)
+    return f"{int(match.group(1))}-{int(match.group(2))}{match.group(3)}" if match else text
 
 
 def main() -> int:
@@ -47,7 +56,7 @@ def main() -> int:
 
     routes, withheld = [], []
     for route_id, visits in by_route.items():
-        numbers = {str(v["노선번호"]).strip() for v in visits}
+        numbers = {fix_number(v["노선번호"]) for v in visits}
         if len(numbers) != 1:
             withheld.append({"id": route_id, "numbers": sorted(numbers)})
             continue

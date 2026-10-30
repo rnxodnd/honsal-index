@@ -1663,3 +1663,55 @@ button:disabled { opacity: .55; cursor: default; }
   font-size: 0;
 }
 #map.bus-far .bus-map-marker[aria-pressed="true"] { background: #a34f07; }
+
+/* 지역 비교: 최대 10개 + BEST 3 */
+.compare-view { max-width: 1200px; }
+.compare-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.compare-card.is-empty { border-style: dashed; background: #fafcfb; }
+.compare-rank {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #e8f5ee;
+  color: var(--primary, #117c56);
+  font-size: 12px;
+  font-weight: 800;
+}
+.compare-toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 14px; }
+.compare-toolbar .tool-btn:disabled { opacity: .5; cursor: default; }
+.compare-podium {
+  margin: 24px 0 8px;
+  padding: 22px;
+  border: 1px solid var(--border, #dfe7e2);
+  border-radius: 18px;
+  background: linear-gradient(180deg, #fffdf5, #ffffff);
+}
+.compare-podium[hidden] { display: none; }
+.podium-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: end;
+  gap: 14px;
+  margin-top: 12px;
+}
+.podium-place {
+  padding: 18px 14px;
+  border: 1px solid var(--border, #dfe7e2);
+  border-radius: 14px;
+  background: #fff;
+  text-align: center;
+}
+.podium-place h3 { margin: 6px 0 2px; font-size: 15px; overflow-wrap: anywhere; }
+.podium-place p { margin: 0 0 6px; color: var(--muted, #7b8c87); font-size: 12px; }
+.podium-medal { display: block; font-size: 30px; line-height: 1; }
+.podium-rank { display: block; margin-top: 4px; font-size: 13px; color: #5c6b66; }
+.podium-score { display: block; font-size: 24px; color: var(--primary, #117c56); }
+/* 시상대 배치: 2위-1위-3위, 1위가 가장 높게 */
+.podium-1 { order: 2; padding-top: 30px; padding-bottom: 30px; border-color: #e3c25a; box-shadow: 0 6px 18px rgba(227, 194, 90, .25); }
+.podium-1 .podium-score { font-size: 30px; }
+.podium-2 { order: 1; }
+.podium-3 { order: 3; }
+@media (max-width: 640px) {
+  .podium-row { grid-template-columns: 1fr; }
+  .podium-1, .podium-2, .podium-3 { order: 0; }
+}

@@ -1624,3 +1624,42 @@ button:disabled { opacity: .55; cursor: default; }
   cursor: pointer;
 }
 .zoom-controls .zoom-slider + button { border-top: 0; }
+
+/* 버스 정류장 아이콘: 작게·반투명·시설 핀 아래 (2026-10-31) */
+.bus-map-marker {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 2px solid #147955;
+  border-radius: 50%;
+  background: #fff;
+  color: inherit;
+  font-size: 12px;
+  line-height: 1;
+  opacity: .7;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .25);
+  transition: opacity .12s ease, transform .12s ease;
+}
+.bus-map-marker:hover,
+.bus-map-marker:focus-visible {
+  opacity: 1;
+  transform: scale(1.2);
+}
+.bus-map-marker[aria-pressed="true"] {
+  opacity: 1;
+  border-color: #a34f07;
+  background: #fff4e6;
+  outline: 2px solid #a34f07;
+  transform: scale(1.2);
+}
+/* 축소 화면에서는 작은 점으로 */
+#map.bus-far .bus-map-marker {
+  width: 9px;
+  height: 9px;
+  border-width: 1px;
+  background: #147955;
+  font-size: 0;
+}
+#map.bus-far .bus-map-marker[aria-pressed="true"] { background: #a34f07; }

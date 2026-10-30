@@ -163,6 +163,11 @@
       color: #147955;
     }
 
+    /* 지도 위 버스 정류장 표시 버튼: 격자 표시 왼쪽 */
+    .bus-map-toggle {
+      right: 122px;
+    }
+
     .grid-map-toggle input {
       width: 14px;
       height: 14px;
@@ -376,6 +381,10 @@
         right: 12px;
       }
 
+      .bus-map-toggle {
+        right: 116px;
+      }
+
       .map-detail-card {
         padding: 16px;
       }
@@ -524,7 +533,7 @@
         <summary>버스 노선 지도 표시</summary>
         <div class="facility-options">
           <label class="facility-option">
-            <input id="showBusStops" type="checkbox" checked>
+            <input id="showBusStops" type="checkbox">
             <span>노선 조회용 정류장 표시</span>
           </label>
         </div>
@@ -581,6 +590,17 @@
             checked
           >
           <span>격자 표시</span>
+        </label>
+
+        <label
+          class="grid-map-toggle bus-map-toggle"
+          title="노선 자료가 있는 정류장을 지도에 표시합니다."
+        >
+          <input
+            type="checkbox"
+            id="mapBusToggle"
+          >
+          <span>버스 정류장</span>
         </label>
 
         <p

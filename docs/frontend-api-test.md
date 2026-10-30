@@ -92,9 +92,30 @@ Quick Tunnel은 테스트용 임시 주소이며 재실행하면 주소가 바�
 
 API 전용 서버의 기본 CORS 허용 출처는 `https://unique-dusk-66f82f.netlify.app`입니다. 다른 화면의 출처는 `HONSAL_ALLOWED_ORIGINS` 환경변수에 정확한 `http(s)://호스트[:포트]` 형식으로 쉼표를 구분해 지정합니다. CORS는 인증 기능이 아닙니다. API 전용 서버는 UI·CSV 경로를 제공하지 않습니다. 로컬 UI 서버만 지도용 `/data/grid_500m_bounds.csv`와 `/data/chuncheon_medical_facilities.csv`를 제공합니다.
 
+## Netlify에 점수 API를 연결하는 방법
+
+팀원은 Python 서버를 따로 실행하지 않아도 됩니다. API 담당자가 실행 중인 HTTPS 주소를 공유하고, 해당 API의 `HONSAL_ALLOWED_ORIGINS`에 Netlify 사이트 출처를 등록합니다. 현재 기존 사이트 `https://unique-dusk-66f82f.netlify.app`는 기본 허용 출처입니다.
+
+GitHub 연동 배포에서는 `codex/ui-facility-results`를 배포 브랜치로 선택합니다. 루트 `netlify.toml`이 다음 설정을 적용합니다.
+
+| 설정 | 값 |
+| --- | --- |
+| Base directory | `app` |
+| Build command | `node ../scripts/build-netlify.mjs` |
+| Publish directory | `dist` (Base directory 기준) |
+| 환경변수 | `HONSAL_API_BASE_URL` = 실행 중인 HTTPS API의 기본 주소 |
+
+Netlify **Project configuration → Environment variables**에서 변수를 추가합니다. 범위를 선택할 수 있으면 **Builds**를 포함합니다. 주소 끝에 `/api`, 경로, 쿼리를 붙이지 않습니다. 저장한 뒤 Deploys에서 재배포합니다. 이전 안내의 빈 빌드 명령·게시 경로 `.` 대신 위 설정을 사용합니다.
+
+빌드는 UI 파일을 `app/dist/`에 복사하고 공개 API 주소만 `js/runtime-config.js`에 기록합니다. Python 코드와 원본 설정은 배포 폴더에 포함하지 않습니다. `.env`나 인증키는 필요하지 않습니다. API 주소가 없거나 HTTPS 출처 형식이 아니면 배포를 중단해 잘못 연결된 화면으로 덮어쓰지 않습니다. 로컬 Python 미리보기는 계속 같은 서버의 API를 사용합니다.
+
+수동 업로드를 원하면 API 담당자가 같은 환경변수로 빌드한 `app/dist/` 폴더를 전달합니다. Git 저장소에 연결되지 않은 수동 배포 사이트라면, 팀원은 Netlify의 기존 프로젝트 **Deploys** 페이지 아래 업로드 영역에 해당 폴더를 드래그해 배포합니다. 이미 빌드한 폴더에는 API 주소가 포함돼 있어 Netlify에서 별도 변수 설정이 필요 없습니다. API 주소를 바꾸면 다시 빌드한 폴더를 배포해야 합니다.
+
+새 사이트 주소를 사용한다면 카카오 JavaScript 키의 허용 도메인과 백엔드 CORS 허용 출처도 함께 등록합니다. Quick Tunnel은 PC·서버·터널이 실행 중일 때만 사용할 수 있는 임시 테스트 주소입니다.
+
 ## 5. 검증과 변경 범위
 
-2026-10-30 로컬 5500 서버에서 Python 테스트 65개와 실제 브라우저 검증을 통과했습니다.
+2026-10-30 로컬 5500 서버에서 Python 테스트 65개와 실제 브라우저 검증을 통과했습니다. Netlify 빌드용 Node 테스트 3개도 통과했고, 빌드 산출물을 실제 사이트 출처로 불러오는 브라우저 검사에서 공개 HTTPS API 호출·67.8점·시설 12곳·카카오 지도 로딩을 확인했습니다. 이 검사는 실제 Netlify 사이트를 재배포하지 않고 수행했습니다.
 
 - 시설 종류 40개 선택지와 당구장·볼링장 선택 시 67.8점·12개 전체 카드 표시
 - 네 항목을 포함한 시험 선택에서 시설 카드 118개와 지도에 전달한 시설 ID 일치

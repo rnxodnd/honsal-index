@@ -137,6 +137,7 @@ def create_app(engine=None, project_dir: Path = PROJECT_DIR, *, serve_ui: bool =
             }
             # 노선 JSON은 팀원이 확보한 경우에만 제공합니다. 미확보를 빈 노선으로 만들지 않습니다.
             inputs["chuncheon_bus.json"] = project_dir / "app" / "data" / "chuncheon_bus.json"
+            inputs["trades.json"] = project_dir / "app" / "data" / "trades.json"
             path = inputs.get(filename)
             if path is None or not path.is_file():
                 raise HTTPException(404)

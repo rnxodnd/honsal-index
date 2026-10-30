@@ -1,15 +1,15 @@
 {
   "schema_version": 2,
-  "status": "proposal_draft",
-  "source": "2026-10-30 사용자 확정 범위: 생활시설·의료·교통·여가시설",
-  "weight_basis": "남은 네 항목의 기존 상대 비중 25:15:20:10을 합계 1로 재조정한 초안",
+  "status": "user_defined_default",
+  "source": "2026-10-30 사용자 지정 기본 가중치",
+  "weight_basis": "교통 편의시설 40%, 생활 편의시설 30%, 의료시설 20%, 여가시설 10%",
   "score_range": [0, 100],
   "score_direction": "higher_is_better",
   "weights": {
-    "daily_life": 0.35714285714285715,
-    "healthcare": 0.21428571428571427,
-    "transport": 0.2857142857142857,
-    "leisure_community": 0.14285714285714285
+    "daily_life": 0.3,
+    "healthcare": 0.2,
+    "transport": 0.4,
+    "leisure_community": 0.1
   },
   "labels": {
     "daily_life": "생활시설",

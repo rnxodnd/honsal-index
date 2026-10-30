@@ -77,6 +77,16 @@
   $("resetMapBtn").addEventListener("click", () => window.HonsalMap?.wholeGangwon());
   $("zoomIn").addEventListener("click", () => window.HonsalMap?.zoom(-1));
   $("zoomOut").addEventListener("click", () => window.HonsalMap?.zoom(1));
+  // 세로 줌 슬라이더: 위로 올릴수록 확대 (카카오 지도 레벨 1=가장 확대, 14=가장 축소)
+  const syncZoomSlider = () => {
+    const level = window.HonsalMap?.getLevel?.();
+    if (level) $("zoomSlider").value = String(15 - level);
+  };
+  $("zoomSlider").addEventListener("input", event => {
+    window.HonsalMap?.setLevel?.(15 - Number(event.target.value));
+  });
+  document.addEventListener("honsal:zoom", syncZoomSlider);
+  document.addEventListener("honsal:ready", syncZoomSlider);
   document.querySelectorAll("[data-region]").forEach(button => {
     button.addEventListener("click", () => window.HonsalMap?.goToRegion(button.dataset.region));
   });

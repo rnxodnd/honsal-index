@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  // 주변 3×3 격자의 실거래가: 유형별 가장 최근 거래 + 최근 3개월 중간값
+  // 1.5km × 1.5km 영역(3×3 격자)의 실거래가: 유형별 가장 최근 거래 + 최근 3개월 중간값
   // 데이터: app/data/trades.json (src/data/geocode_trades.py 로 생성)
   const $ = id => document.getElementById(id);
   const ORDER = ["sh_rent", "offi_rent", "rh_rent", "apt_rent", "offi_trade", "apt_trade"];
@@ -97,16 +97,32 @@
     });
   }
 
+  // 카드가 띠 너비를 넘칠 때만 ◀ ▶ 버튼을 보여줍니다.
+  function updateArrows() {
+    const list = $("tradeList");
+    const overflow = list.scrollWidth > list.clientWidth + 4;
+    $("tradePrev").hidden = !overflow || list.scrollLeft <= 4;
+    $("tradeNext").hidden = !overflow || list.scrollLeft + list.clientWidth >= list.scrollWidth - 4;
+  }
+
+  function scrollCards(direction) {
+    const list = $("tradeList");
+    const width = (list.querySelector(".poi-card")?.offsetWidth || 280) + 12;
+    list.scrollBy({left: direction * width, behavior: "smooth"});
+  }
+
   function message(text) {
     $("tradeBadge").textContent = "—";
     $("tradeList").replaceChildren(node("p", text, "empty-dataset"));
+    $("tradeList").scrollLeft = 0;
+    updateArrows();
   }
 
   async function render() {
     const token = ++renderToken;
     if (loadError) return message(loadError);
     if (!data) return message("실거래가 데이터를 불러오는 중입니다.");
-    if (gridPhase !== "ready" || !gridIds.length) return message("지도에서 위치를 선택하면 주변 3×3 격자의 실거래가를 표시합니다.");
+    if (gridPhase !== "ready" || !gridIds.length) return message("지도에서 위치를 선택하면 1.5km × 1.5km 영역의 실거래가를 표시합니다.");
 
     // 1) 격자 단위: 9개 격자의 거래를 유형별로 합친다.
     const merged = {};
@@ -127,7 +143,7 @@
     let total = 0;
     ORDER.forEach(type => {
       if (merged[type]?.length) {
-        cards.push(card(type, merged[type], "주변 3×3 격자"));
+        cards.push(card(type, merged[type], "1.5km × 1.5km 영역"));
         total += merged[type].length;
       }
       if (dongRows[type]?.length) {
@@ -139,7 +155,9 @@
     $("tradeBadge").textContent = total ? `${total.toLocaleString("ko-KR")}건` : "거래 없음";
     const list = $("tradeList");
     list.replaceChildren(...cards);
-    if (!cards.length) list.append(node("p", "최근 1년간 주변 3×3 격자에서 확인된 거래가 없습니다.", "empty-dataset"));
+    if (!cards.length) list.append(node("p", "최근 1년간 1.5km × 1.5km 영역에서 확인된 거래가 없습니다.", "empty-dataset"));
+    list.scrollLeft = 0;
+    updateArrows();
 
     const recent = data.meta.recent_months;
     $("tradeNote").textContent =
@@ -163,6 +181,11 @@
     gridIds = event.detail.ids || [];
     render();
   });
+
+  $("tradePrev").addEventListener("click", () => scrollCards(-1));
+  $("tradeNext").addEventListener("click", () => scrollCards(1));
+  $("tradeList").addEventListener("scroll", updateArrows, {passive: true});
+  window.addEventListener("resize", updateArrows);
 
   const initial = window.HonsalGrid?.getState?.();
   if (initial) {

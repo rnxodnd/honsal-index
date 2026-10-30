@@ -19,11 +19,14 @@
   let selectedIds = [];
   let lastPosition = "";
   let phase = "idle";
+  // 가운데 격자 거주 표시: true / false / null(확인 전·범위 밖)
+  let centerPopulated = null;
 
   function state() {
     return {
       phase,
       ids: [...selectedIds],
+      centerPopulated,
       message: $("gridStatus").textContent
     };
   }
@@ -198,6 +201,7 @@
     if (!loaded || !map || !selected) return;
 
     clear();
+    centerPopulated = null;
     $("gridFit").disabled = true;
 
     say("gridAdmin", "—");
@@ -223,6 +227,7 @@
         key => grids.has(key)
       );
 
+      centerPopulated = center.is_populated === "1";
       say("gridAdmin", center.adm_nm || "정보 없음");
 
       say(

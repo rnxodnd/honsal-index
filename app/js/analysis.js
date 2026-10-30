@@ -16,6 +16,22 @@
   let generation = 0;
   let lastResult = null;
   let state = "loading";
+  // 거주 표시 없는 격자에서 사용자가 "그래도 점수 보기"를 누른 경우
+  let forceUninhabited = false;
+
+  function isUninhabited() {
+    const grid = window.HonsalGrid?.getState?.();
+    return grid?.phase === "ready" && grid.centerPopulated === false;
+  }
+
+  function showUninhabited() {
+    clearResults("가운데 격자에 거주 인구 표시가 없어 점수 계산과 비교 추가를 멈췄습니다. 그래도 보려면 아래 버튼을 누르세요.", "uninhabited");
+    $("analysisState").textContent = "거주 없음";
+    $("analysisTitle").textContent = "사람이 거주하지 않는 지역입니다";
+    $("analysisDescription").textContent = "SGIS 1km 인구 자료 기준으로 거주 표시가 없는 격자입니다.";
+    $("dataSourceBadge").textContent = "거주 없음";
+    $("forceAnalyzeBtn").hidden = false;
+  }
 
   function node(tag, text, className) {
     const item = document.createElement(tag);
@@ -39,6 +55,7 @@
 
   function clearResults(message, status = "idle") {
     lastResult = null;
+    $("forceAnalyzeBtn").hidden = true;
     $("analysisScore").textContent = "—";
     document.querySelector(".score-circle").classList.remove("is-ready");
     $("analysisState").textContent = status === "error" ? "분석 오류" : status === "loading" ? "분석 중" : "시설 선택 대기";
@@ -86,8 +103,10 @@
     document.querySelector(".score-circle").classList.add("is-ready");
     $("analysisState").textContent = "분석 완료";
     $("analysisTitle").textContent = "선택한 시설 기준 혼살지수";
-    $("analysisDescription").textContent = `주변 3×3 격자 · 선택 시설 ${result.facilities.length.toLocaleString("ko-KR")}곳`;
-    $("analysisStatus").textContent = "위치나 시설 선택을 바꾸면 자동으로 다시 계산합니다.";
+    $("analysisDescription").textContent = `1.5km × 1.5km 영역 · 선택 시설 ${result.facilities.length.toLocaleString("ko-KR")}곳`;
+    $("analysisStatus").textContent = forceUninhabited && isUninhabited()
+      ? "거주 표시가 없는 지역의 참고용 점수입니다. 위치나 시설 선택을 바꾸면 자동으로 다시 계산합니다."
+      : "위치나 시설 선택을 바꾸면 자동으로 다시 계산합니다.";
     $("analysisStatus").classList.remove("is-error");
     $("localDataSection").setAttribute("aria-busy", "false");
     $("datasetRegionName").textContent = result.location.name || "선택한 위치";
@@ -101,7 +120,7 @@
       const list = $(config.list);
       list.replaceChildren();
       if (!facilities.length) {
-        list.append(node("p", isSelected ? "주변 3×3 격자 안에 선택한 종류의 시설이 없습니다." : `${config.label} 유형을 선택하면 해당 시설을 모두 표시합니다.`, "empty-dataset"));
+        list.append(node("p", isSelected ? "1.5km × 1.5km 영역 안에 선택한 종류의 시설이 없습니다." : `${config.label} 유형을 선택하면 해당 시설을 모두 표시합니다.`, "empty-dataset"));
       } else {
         const fragment = document.createDocumentFragment();
         facilities.forEach(facility => fragment.append(renderFacility(facility)));
@@ -120,7 +139,7 @@
     $("insightBullets").replaceChildren(...insights);
     $("datasetSummary").replaceChildren(
       node("p", `${result.grid.adm_nm || "춘천시"} · ${result.grid.grid_id}`),
-      node("p", `선택한 ${selectionCount(selected)}개 시설 유형의 ${result.facilities.length.toLocaleString("ko-KR")}곳을 모두 표시했습니다. 시설 수는 주변 3×3 격자의 개수이며, 750m보다 먼 모서리의 시설도 목록에 포함될 수 있습니다.`),
+      node("p", `선택한 ${selectionCount(selected)}개 시설 유형의 ${result.facilities.length.toLocaleString("ko-KR")}곳을 모두 표시했습니다. 시설 수는 1.5km × 1.5km 영역 안의 개수이며, 750m보다 먼 모서리의 시설도 목록에 포함될 수 있습니다.`),
       node("p", "같은 상호명·유형·좌표의 서로 다른 시설은 각각 표시합니다. 점수는 유형별 가장 가까운 시설의 거리로 계산하며, 시설 수를 점수로 합산하지 않습니다.")
     );
     try { window.HonsalMap?.renderAnalysis?.(result); }
@@ -130,6 +149,10 @@
 
   async function analyze(id, selected) {
     if (id !== generation) return;
+    if (isUninhabited() && !forceUninhabited) {
+      showUninhabited();
+      return;
+    }
     const location = window.HonsalMap?.getSelected?.() || options.default_location;
     const lon = location.lng ?? location.lon;
     const lat = location.lat;
@@ -157,6 +180,7 @@
   }
 
   function schedule(reason = "location") {
+    if (reason === "location") forceUninhabited = false;
     generation += 1;
     clearTimeout(timer);
     controller?.abort();
@@ -170,6 +194,10 @@
     if (!options) {
       clearResults(optionsLoading ? "시설 목록을 불러오는 중입니다." : optionsError,
         optionsLoading ? "loading" : "error");
+      return;
+    }
+    if (isUninhabited() && !forceUninhabited) {
+      showUninhabited();
       return;
     }
     if (!count) {
@@ -236,6 +264,14 @@
   });
   $("analysisRetry").addEventListener("click", () => options ? schedule("retry") : loadOptions());
   document.addEventListener("honsal:selection", () => schedule("location"));
+  // 격자 계산이 끝난 뒤 거주 없음이면 경고로 바꿉니다.
+  document.addEventListener("honsal:grid", event => {
+    if (event.detail.phase === "ready" && event.detail.centerPopulated === false && !forceUninhabited) schedule("grid");
+  });
+  $("forceAnalyzeBtn").addEventListener("click", () => {
+    forceUninhabited = true;
+    schedule("force");
+  });
   document.addEventListener("honsal:ready", () => {
     if (lastResult) window.HonsalMap?.renderAnalysis?.(lastResult);
   });

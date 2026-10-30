@@ -599,6 +599,17 @@
             +
           </button>
 
+          <input
+            id="zoomSlider"
+            class="zoom-slider"
+            type="range"
+            min="1"
+            max="14"
+            step="1"
+            value="10"
+            aria-label="지도 확대 수준 (위로 올리면 확대)"
+          >
+
           <button
             id="zoomOut"
             type="button"
@@ -614,6 +625,19 @@
           </span>
         </div>
       </div>
+      <!-- 지도 바로 아래: 주변 실거래가 (카드가 넘치면 가로 스크롤) -->
+      <section class="trade-strip" aria-labelledby="tradeStripTitle">
+        <div class="trade-strip-head">
+          <h3 id="tradeStripTitle">주변 실거래가</h3>
+          <span id="tradeBadge" class="dataset-badge">—</span>
+          <p id="tradeNote" class="trade-strip-note"></p>
+        </div>
+        <div class="trade-strip-body">
+          <button id="tradePrev" class="slider-arrow prev" type="button" aria-label="이전 거래 카드" hidden>◀</button>
+          <div id="tradeList" class="trade-strip-list" tabindex="0" aria-label="주변 실거래가 카드"></div>
+          <button id="tradeNext" class="slider-arrow next" type="button" aria-label="다음 거래 카드" hidden>▶</button>
+        </div>
+      </section>
     </section>
 
     <!-- 오른쪽 정보 -->
@@ -635,13 +659,14 @@
         </div>
 
         <p id="analysisStatus" class="analysis-status" role="status" aria-live="polite"></p>
+        <button id="forceAnalyzeBtn" class="detail-small-button" type="button" hidden>그래도 점수 보기</button>
         <button id="analysisRetry" class="detail-small-button" type="button">다시 분석</button>
         <button id="addCompareBtn" type="button" class="compare-btn">
           ＋ 비교 목록에 추가
         </button>
       </section>
 
-      <!-- 3×3 생활권 경유 버스 -->
+      <!-- 1.5km × 1.5km 영역 경유 버스 -->
       <section
         id="transportCard"
         class="transport-card"
@@ -649,7 +674,7 @@
       >
         <div class="section-row">
           <h3 id="transportTitle">경유 버스</h3>
-          <span class="small-muted">3×3 생활권</span>
+          <span class="small-muted">1.5km × 1.5km 영역</span>
         </div>
 
         <p
@@ -848,25 +873,25 @@
       <div class="dataset-stat-card">
         <span>편의시설</span>
         <strong id="facilityCount">—</strong>
-        <small>주변 3×3 격자의 선택 시설</small>
+        <small>1.5km × 1.5km 영역 내 선택 시설</small>
       </div>
 
       <div class="dataset-stat-card">
         <span>여가시설</span>
         <strong id="leisureCount">—</strong>
-        <small>주변 3×3 격자의 선택 시설</small>
+        <small>1.5km × 1.5km 영역 내 선택 시설</small>
       </div>
 
       <div class="dataset-stat-card">
         <span>의료시설</span>
         <strong id="infraCount">—</strong>
-        <small>주변 3×3 격자의 선택 시설</small>
+        <small>1.5km × 1.5km 영역 내 선택 시설</small>
       </div>
 
       <div class="dataset-stat-card">
         <span>교통시설</span>
         <strong id="transportCount">—</strong>
-        <small>주변 3×3 격자의 선택 시설</small>
+        <small>1.5km × 1.5km 영역 내 선택 시설</small>
       </div>
     </div>
 
@@ -909,13 +934,6 @@
             <h3>주변 교통시설</h3><span id="transportBadge" class="dataset-badge">—</span>
           </div>
           <div id="transportList" class="poi-grid"></div>
-        </section>
-        <section class="dataset-card">
-          <div class="dataset-card-head">
-            <h3>주변 실거래가</h3><span id="tradeBadge" class="dataset-badge">—</span>
-          </div>
-          <div id="tradeList" class="poi-grid"></div>
-          <p id="tradeNote" class="empty-dataset"></p>
         </section>
         <section class="dataset-card">
           <div class="dataset-card-head">
@@ -982,7 +1000,7 @@
 
         <select id="routeScope">
           <option value="local">
-            선택한 3×3 생활권 경유 버스
+            선택한 1.5km × 1.5km 영역 경유 버스
           </option>
 
           <option value="all">

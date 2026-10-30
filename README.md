@@ -6,7 +6,7 @@
 
 여러 곳에 흩어진 생활 정보를 모아 동네별 생활 편의를 비교하고, 사용자의 우선순위에 맞는 지역과 추천 근거를 제공합니다.
 
-현재 `codex/ui-facility-results`는 기존 화면 디자인에 점수 API를 연결한 테스트 브랜치입니다. 위치·시설 선택을 바꾸면 실제 점수와 주변 시설 전체 목록을 자동으로 갱신합니다. 백엔드 API는 PR #2로 `main`에 병합되었지만, 이번 UI 연결은 아직 `main`과 Netlify 배포 화면에 반영하지 않았습니다. [프론트엔드 API 테스트 안내](docs/frontend-api-test.md)에 따라 로컬에서 확인합니다.
+현재 `codex/ui-facility-results`는 기존 화면 디자인에 점수 API를 연결한 테스트 브랜치입니다. 위치·시설 선택을 바꾸면 실제 점수와 주변 시설 전체 목록을 자동으로 갱신합니다. 백엔드 API는 PR #2로 `main`에 병합되었지만 이번 UI 연결은 아직 `main`에 병합하지 않았습니다. [프론트엔드 API 테스트 안내](docs/frontend-api-test.md)에 따라 로컬 또는 기존 Netlify 사이트에 최신 파일을 배포해 확인합니다.
 
 ## 프로젝트 개요
 
@@ -207,7 +207,7 @@ Windows PowerShell:
 
 <http://127.0.0.1:5500/api/health>에서 API 준비 상태를 확인합니다. 지도와 주소 검색에는 카카오 JavaScript 키의 등록 도메인 설정이 필요합니다. 지도 SDK가 작동하지 않아도 기본 위치의 점수 API 요청은 사용할 수 있습니다. Windows·Linux 실제 설치는 각 팀원 PC에서 확인해야 합니다.
 
-API만 별도로 실행하려면 `src.public_api:app`을 8001 포트에서 사용합니다. 이 진입점은 UI·CSV 파일을 제공하지 않습니다. Netlify 기본 허용 출처는 `https://unique-dusk-66f82f.netlify.app`이며, 다른 출처는 `HONSAL_ALLOWED_ORIGINS`로 지정합니다. 별도 HTTPS API와 정적 화면 연결 방법은 [프론트엔드 API 테스트 안내](docs/frontend-api-test.md)에 있습니다. 현재 Netlify 배포 화면은 이번 UI 연결을 포함하지 않습니다.
+API만 별도로 실행하려면 `src.public_api:app`을 8001 포트에서 사용합니다. 이 진입점은 UI·CSV 파일을 제공하지 않습니다. Netlify 기본 허용 출처는 `https://unique-dusk-66f82f.netlify.app`이며, 다른 출처는 `HONSAL_ALLOWED_ORIGINS`로 지정합니다. 별도 HTTPS API와 정적 화면 연결 방법은 [프론트엔드 API 테스트 안내](docs/frontend-api-test.md)에 있습니다. Netlify에는 업로드한 파일이 표시되므로 Git pull 이후 별도 배포가 필요합니다.
 
 ```bash
 .venv/bin/python -m unittest discover -s tests -v
@@ -215,7 +215,9 @@ API만 별도로 실행하려면 `src.public_api:app`을 8001 포트에서 사�
 
 현재 Python 테스트 65개가 통과했습니다. 춘천시청 인근 좌표(`127.7298`, `37.8813`)에서 당구장·볼링장만 선택한 실제 데이터 요청은 67.8점, 주변 해당 시설 12개를 반환합니다. UI는 이 12개를 모두 표시하며 같은 상호명·유형·좌표라도 시설 ID가 다르면 개별 시설로 유지합니다. 점수 산식은 기존의 유형별 최근접 거리 방식을 유지합니다.
 
-Netlify 배포는 `netlify.toml`의 `app` → `dist` 빌드를 사용합니다. Netlify의 빌드 환경변수 `HONSAL_API_BASE_URL`에 실행 중인 HTTPS 백엔드 주소를 넣고 배포합니다. 자세한 Git 연동·수동 업로드 절차는 [프론트엔드 API 테스트 안내](docs/frontend-api-test.md)를 참고합니다.
+기존 Netlify 사이트에 직접 업로드해 시험할 때는 이 브랜치를 pull한 뒤 최신 `app` 폴더를 배포합니다. `app/js/runtime-config.js`에 기존 사이트에서만 사용하는 임시 공개 API 주소가 포함되어 있어 시설 목록을 불러올 수 있습니다. PC·서버·터널이 실행 중이어야 하며 터널 주소가 바뀌면 설정을 갱신하고 재배포합니다. 로컬 Python 서버는 기존처럼 같은 서버의 API를 사용합니다.
+
+Git 연동 배포는 `netlify.toml`의 `app` → `dist` 빌드를 사용합니다. Netlify의 빌드 환경변수 `HONSAL_API_BASE_URL`에 실행 중인 HTTPS 백엔드 주소를 넣고 배포합니다. 이 환경변수는 빌드 산출물의 API 주소를 지정합니다. 자세한 Git 연동·수동 업로드 절차는 [프론트엔드 API 테스트 안내](docs/frontend-api-test.md)를 참고합니다.
 
 ## 진행 현황
 

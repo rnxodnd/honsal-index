@@ -1,6 +1,6 @@
 # 기존 UI에서 실제 점수와 시설 목록 테스트하기
 
-`codex/ui-facility-results`는 기존 디자인을 유지하면서 점수 API를 화면에 연결한 테스트 브랜치입니다. **로컬 UI에서 시설을 선택하면 점수·개수·상호명 목록이 자동으로 갱신됩니다.** 개발자 도구 콘솔에 코드를 붙여넣을 필요는 없습니다. 백엔드 API는 PR #2로 `main`에 병합되었지만, 이번 UI 연결은 아직 `main`에 병합하거나 Netlify에 재배포하지 않았습니다.
+`codex/ui-facility-results`는 기존 디자인을 유지하면서 점수 API를 화면에 연결한 테스트 브랜치입니다. **시설을 선택하면 점수·개수·상호명 목록이 자동으로 갱신됩니다.** 개발자 도구 콘솔에 코드를 붙여넣을 필요는 없습니다. 백엔드 API는 PR #2로 `main`에 병합되었지만 이번 UI 연결은 아직 `main`에 병합하지 않았습니다. 기존 Netlify 사이트에서 시험하려면 이 브랜치의 최신 파일을 배포합니다.
 
 ## 최신 팀원 UI와 통합 경로
 
@@ -29,7 +29,7 @@
 
 Windows에서는 `.venv/bin/python`을 `.\.venv\Scripts\python.exe`로 바꿉니다. 다른 팀원은 자기 PC에 Python 3.12 가상환경을 생성합니다.
 
-브라우저에서 <http://127.0.0.1:5500>을 엽니다. <http://127.0.0.1:5500/api/health>는 API 상태 확인 주소이며, 정상이라면 `status: "ok"`, 시설 5,252개·후보 격자 2,526개를 반환합니다. [기존 Netlify 주소](https://unique-dusk-66f82f.netlify.app/)는 이번 UI 연결이 배포되지 않아 로컬 화면과 다를 수 있습니다.
+브라우저에서 <http://127.0.0.1:5500>을 엽니다. <http://127.0.0.1:5500/api/health>는 API 상태 확인 주소이며, 정상이라면 `status: "ok"`, 시설 5,252개·후보 격자 2,526개를 반환합니다. [기존 Netlify 주소](https://unique-dusk-66f82f.netlify.app/)에는 마지막으로 업로드한 파일이 표시되므로 Git pull 후에도 별도 배포가 필요합니다.
 
 지도·주소 검색은 카카오 JavaScript 키에 등록한 도메인 설정에 따릅니다. 지도 SDK 로딩이 실패해도 기본 위치의 API 분석을 확인할 수 있습니다.
 
@@ -88,13 +88,29 @@ cloudflared tunnel --url http://127.0.0.1:8001 --protocol http2 --no-autoupdate
 
 `BACKEND_URL`은 실행 중인 HTTPS API 주소로 바꿉니다. 이 설정과 UI 연결 코드를 정적 호스팅에 실제 배포해야 해당 사이트에서 자동 연동됩니다. Netlify의 기존 화면은 자동으로 바뀌지 않습니다.
 
-Quick Tunnel은 테스트용 임시 주소이며 재실행하면 주소가 바뀌고 가동 시간을 보장하지 않습니다. PC·API 서버·터널이 모두 실행 중이어야 하므로 고정 배포 주소로 저장하지 않습니다. [Cloudflare 공식 안내](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/)
+Quick Tunnel은 테스트용 임시 주소이며 재실행하면 주소가 바뀌고 가동 시간을 보장하지 않습니다. PC·API 서버·터널이 모두 실행 중이어야 합니다. 이 테스트 브랜치에는 기존 Netlify 사이트의 수동 배포 확인용 주소를 저장했으며, 고정 운영 주소가 아닙니다. 터널 주소가 바뀌면 설정을 갱신하고 다시 배포합니다. [Cloudflare 공식 안내](https://developers.cloudflare.com/tunnel/get-started/quick-tunnels/)
 
 API 전용 서버의 기본 CORS 허용 출처는 `https://unique-dusk-66f82f.netlify.app`입니다. 다른 화면의 출처는 `HONSAL_ALLOWED_ORIGINS` 환경변수에 정확한 `http(s)://호스트[:포트]` 형식으로 쉼표를 구분해 지정합니다. CORS는 인증 기능이 아닙니다. API 전용 서버는 UI·CSV 경로를 제공하지 않습니다. 로컬 UI 서버만 지도용 `/data/grid_500m_bounds.csv`와 `/data/chuncheon_medical_facilities.csv`를 제공합니다.
 
 ## Netlify에 점수 API를 연결하는 방법
 
 팀원은 Python 서버를 따로 실행하지 않아도 됩니다. API 담당자가 실행 중인 HTTPS 주소를 공유하고, 해당 API의 `HONSAL_ALLOWED_ORIGINS`에 Netlify 사이트 출처를 등록합니다. 현재 기존 사이트 `https://unique-dusk-66f82f.netlify.app`는 기본 허용 출처입니다.
+
+### 현재 테스트 브랜치를 pull한 뒤 직접 업로드
+
+2026-10-30 테스트용 공개 API 주소는 `https://med-permanent-ceremony-codes.trycloudflare.com`입니다. 추적되는 `app/js/runtime-config.js`에 이 주소를 넣어 **기존 `https://unique-dusk-66f82f.netlify.app`에서만** 기본값으로 사용합니다. 로컬에서는 같은 서버의 API를 쓰고, 별도로 지정한 `window.HONSAL_API_BASE_URL`은 우선 적용합니다.
+
+이미 `codex/ui-facility-results`에 있는 팀원은 프로젝트 폴더에서 다음 명령으로 갱신합니다.
+
+```powershell
+git pull --ff-only origin codex/ui-facility-results
+```
+
+Netlify 기존 프로젝트의 **Deploys → 수동 업로드 영역**에 최신 `app` 폴더를 올린 뒤 `Ctrl + Shift + R`로 새로고침합니다. `app/index.html`과 `css`, `js`, `data`가 함께 포함되어야 합니다. 이 테스트 방법은 빌드 없이도 API 주소가 적용됩니다. Git pull은 Netlify 사이트를 자동 갱신하지 않으며, 이전에 만든 `app/dist`도 갱신하지 않습니다. 예전 `dist`를 재사용하려면 아래 빌드부터 다시 실행해야 합니다.
+
+시설 항목이 비어 있으면 배포된 `/js/runtime-config.js`의 API 주소와 공개 API의 `/api/health` 응답을 확인합니다. Netlify의 환경변수는 수동 업로드한 JavaScript 파일에 자동 주입되지 않습니다.
+
+### 빌드 후 배포 또는 Git 자동 배포
 
 GitHub 연동 배포에서는 `codex/ui-facility-results`를 배포 브랜치로 선택합니다. 루트 `netlify.toml`이 다음 설정을 적용합니다.
 
@@ -115,7 +131,7 @@ Netlify **Project configuration → Environment variables**에서 변수를 추�
 
 ## 5. 검증과 변경 범위
 
-2026-10-30 로컬 5500 서버에서 Python 테스트 65개와 실제 브라우저 검증을 통과했습니다. Netlify 빌드용 Node 테스트 3개도 통과했고, 빌드 산출물을 실제 사이트 출처로 불러오는 브라우저 검사에서 공개 HTTPS API 호출·67.8점·시설 12곳·카카오 지도 로딩을 확인했습니다. 이 검사는 실제 Netlify 사이트를 재배포하지 않고 수행했습니다.
+2026-10-30 로컬 5500 서버에서 Python 테스트 65개와 실제 브라우저 검증을 통과했습니다. Netlify 빌드·API 주소 설정 Node 테스트 6개도 통과했습니다. 원본 `app` 폴더와 빌드 산출물을 각각 기존 사이트 출처로 불러오는 브라우저 검사에서 공개 HTTPS API 호출·시설 유형 40종·67.8점·시설 12곳·카카오 지도 로딩을 확인했습니다. 이 검사는 실제 Netlify 사이트를 재배포하지 않고 수행했습니다.
 
 - 시설 종류 40개 선택지와 당구장·볼링장 선택 시 67.8점·12개 전체 카드 표시
 - 네 항목을 포함한 시험 선택에서 시설 카드 118개와 지도에 전달한 시설 ID 일치

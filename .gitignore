@@ -12,5 +12,6 @@ __pycache__/
 .streamlit/secrets.toml
 data/raw/*
 !data/raw/.gitkeep
+!data/raw/chuncheon_dong.geojson
 data/processed/*
 !data/processed/.gitkeep

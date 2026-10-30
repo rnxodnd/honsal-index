@@ -15,9 +15,30 @@
 
 사용자가 선택할 수 있는 목록은 실제로 정리된 자료에서 만듭니다. 아직 자료가 없는 항목은 ‘자료 준비 중’으로 표시합니다. 자료가 없는 업종을 시설 0개로 표시하지 않습니다.
 
+## 현재 데이터 분류 결과
+
+의료·교통의 기존 통합 CSV 두 개를 분류하여 실제 시설 **2,420개**, 선택용 세부 종류 **14개**를 만들었습니다. 원본 CSV와 시설 ID는 변경하지 않았습니다.
+
+| 항목 | 시설 수 | 선택 가능한 세부 종류 |
+| --- | ---: | --- |
+| 생활시설 | 자료 준비 중 | 상권의 실제 업종 코드 확인 후 추가 |
+| 의료 | 524 | 의원 181, 약국 144, 치과의원 88, 한의원 67, 보건진료소 13, 보건지소 10, 요양병원 8, 정신병원 5, 병원 4, 종합병원 2, 보건소 1, 한방병원 1 |
+| 교통 | 1,896 | 버스정류장 1,890, 철도역 6 |
+| 여가시설 | 자료 준비 중 | 상권의 실제 업종 코드 확인 후 추가 |
+
+분류한 자료의 `analysis_category`와 `analysis_subtype`을 기존 선택 함수에 바로 전달할 수 있습니다.
+
+- `data/processed/chuncheon_facilities_classified.csv`: 시설별 공통 분류와 위치·출처를 포함한 **분석 입력 파일**. 앱은 이 파일 하나를 읽습니다.
+- `data/processed/facility_type_catalog.csv`: 항목·세부 시설별 개수와 좌표 보유 개수를 담은 14행 요약. 시설별 자료에 다시 합쳐 집계하지 않습니다.
+- `data/processed/facility_dataset_status.csv`: 네 항목의 분류 상태. 생활·여가 수량은 0이 아니라 빈 값이며 `awaiting_data`입니다.
+
+기존 의료·교통 통합 CSV 또는 개별 CSV를 새 분석 입력 파일과 다시 합치면 같은 시설이 중복됩니다. 같은 이름의 다른 시설은 각자 ID를 유지하고, 전철·ITX가 공유하는 역도 복제하지 않습니다. 의료 세부 종류는 심평원 원본 종별 분류이며 진료과·진료 가능 시간으로 해석하지 않습니다.
+
+프로젝트 루트에서 `python src/data/classify_facilities.py`로 다시 만들 수 있습니다. 상권 담당자가 아래 공통 컬럼과 실제 업종 코드를 채운 CSV를 전달하면 `python src/data/classify_facilities.py --commerce <상권CSV경로>`로 추가합니다. 이 옵션은 이미 분류한 자료를 받는 것이며 원본 업종 코드를 자동으로 추측하는 기능이 아닙니다. 공식 소분류 코드 대응표는 상권 원본 확보 후 확정합니다.
+
 ## 데이터 담당자가 보존할 컬럼
 
-기존 CSV는 그대로 두고 분석용 데이터프레임에 공통 컬럼을 추가합니다. 기존 `category`, `facility_type`을 덮어쓰지 않습니다.
+기존 CSV는 그대로 두고 분석용 파일에 공통 컬럼을 추가합니다. 기존 `category`, `facility_type`을 덮어쓰지 않습니다.
 
 | 컬럼 | 의미 |
 | --- | --- |
@@ -77,7 +98,10 @@ from src.scoring.preferences import (
     available_facility_types, filter_facilities, calculate_preference_scores,
 )
 
-# facilities: 공통 분류를 추가한 시설별 자료
+import pandas as pd
+facilities = pd.read_csv(
+    "data/processed/chuncheon_facilities_classified.csv", dtype={"facility_id": "string"}
+)
 # type_scores: 별도 공간 분석에서 만든 격자·세부유형별 0~100점
 options = available_facility_types(facilities)
 selected = render_facility_filters(options)
@@ -93,7 +117,7 @@ scores = calculate_preference_scores(type_scores, selected)
 
 ## 현재 구현과 다음 연결 작업
 
-시설 선택 UI 컴포넌트, 공통 필터, 세부유형 점수 평균·가중 총점·순위 함수와 테스트를 추가했습니다. 상권 자료의 실제 코드 대응표, 격자별 접근성 점수 생성, 최종 지도·추천 화면 연결은 아직 진행할 작업입니다. 현재 CSV나 테스트용 가상 값을 실제 동네 점수로 표시하지 않습니다.
+시설 2,420개의 공통 분류, 선택용 목록, 자료 준비 상태와 재실행 코드를 추가했습니다. 시설 선택 UI 컴포넌트, 공통 필터, 세부유형 점수 평균·가중 총점·순위 함수도 있습니다. 상권 자료의 실제 코드 대응표, 격자별 접근성 점수 생성, 최종 지도·추천 화면 연결은 아직 진행할 작업입니다. 현재 시설 개수나 테스트용 가상 값을 실제 동네 점수로 표시하지 않습니다.
 
 - 데이터 담당: 상권 세부 업종을 보존해 공통 분류 컬럼과 대응표 작성.
 - 팀장: 격자별 시설 접근성 점수를 계산해 `type_scores` 생성 후 선택 함수 연결.

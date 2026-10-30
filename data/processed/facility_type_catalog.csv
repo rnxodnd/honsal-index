@@ -1,0 +1,15 @@
+﻿analysis_category,analysis_category_label,analysis_subtype,facility_count,located_count
+healthcare,의료,병원,4,4
+healthcare,의료,보건소,1,1
+healthcare,의료,보건지소,10,10
+healthcare,의료,보건진료소,13,13
+healthcare,의료,약국,144,144
+healthcare,의료,요양병원,8,8
+healthcare,의료,의원,181,181
+healthcare,의료,정신병원,5,5
+healthcare,의료,종합병원,2,2
+healthcare,의료,치과의원,88,88
+healthcare,의료,한방병원,1,1
+healthcare,의료,한의원,67,67
+transport,교통,버스정류장,1890,1890
+transport,교통,철도역,6,6

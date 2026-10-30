@@ -15,3 +15,6 @@ data/raw/*
 !data/raw/chuncheon_dong.geojson
 data/processed/*
 !data/processed/.gitkeep
+!data/processed/chuncheon_hospitals.csv
+!data/processed/chuncheon_pharmacies.csv
+!data/processed/chuncheon_medical_facilities.csv

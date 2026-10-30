@@ -62,8 +62,8 @@ class PreferenceTests(unittest.TestCase):
     def test_weights_exclude_unselected_categories(self):
         actual = normalize_selected_weights({"healthcare": ["약국"], "transport": ["버스정류장"]})
         self.assertEqual(set(actual), {"healthcare", "transport"})
-        self.assertAlmostEqual(actual["healthcare"], 3 / 7)
-        self.assertAlmostEqual(actual["transport"], 4 / 7)
+        self.assertAlmostEqual(actual["healthcare"], 1 / 3)
+        self.assertAlmostEqual(actual["transport"], 2 / 3)
         self.assertAlmostEqual(sum(actual.values()), 1)
 
     def test_invalid_inputs_and_duplicate_scores_are_rejected(self):

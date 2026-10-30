@@ -20,3 +20,5 @@ data/processed/*
 !data/processed/chuncheon_medical_facilities.csv
 !data/processed/grid_500m_filtered.csv
 !data/processed/grid_500m_filtered.geojson
+!data/processed/grid_500m_bounds.csv
+!data/processed/facilities_grid.csv

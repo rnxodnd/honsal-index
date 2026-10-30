@@ -12,6 +12,7 @@ __pycache__/
 .streamlit/secrets.toml
 data/raw/*
 !data/raw/.gitkeep
+!data/raw/chuncheon_dong.geojson
 data/processed/*
 !data/processed/.gitkeep
 !data/processed/chuncheon_hospitals.csv
@@ -23,3 +24,5 @@ data/processed/*
 !data/processed/chuncheon_facilities_classified.csv
 !data/processed/facility_type_catalog.csv
 !data/processed/facility_dataset_status.csv
+!data/processed/grid_500m_filtered.csv
+!data/processed/grid_500m_filtered.geojson

@@ -15,7 +15,7 @@
 | 제출물 | 실행 가능한 프로그램 완성본, 발표자료 |
 | 대상 지역 | 춘천·원주·강릉 중 데이터 확보가 가능한 1개 도시 |
 | 비교 단위 | 읍·면·동 등 통일된 행정구역 기준 |
-| 현재 단계 | 프로젝트 구조 및 개발 계획 준비 완료 |
+| 현재 단계 | 프로젝트 구조·계획·Python 3.12 가상환경 준비 완료. 앱과 데이터는 구현 예정 |
 
 ## 해결하려는 문제
 
@@ -82,25 +82,27 @@ AI 질의응답과 추가 도시 지원은 핵심 기능 완성 후 검토합니
 | 구분 | 사용 도구 및 기술 |
 | --- | --- |
 | 주 개발 도구 | VS Code |
-| 개발 언어 | Python |
-| 웹 화면 | Streamlit |
-| 데이터 처리 | pandas |
+| 개발 언어 | Python 3.12 (개발 PC: 3.12.14) |
+| 웹 화면 | Streamlit 1.66.1 |
+| 데이터 처리 | pandas 3.1.0 |
 | 초기 데이터 저장 | CSV, 필요 시 GeoJSON |
 | 분석 실험 | Jupyter Notebook / Colab |
 | 협업 및 버전 관리 | Git / GitHub |
 
-구체적인 라이브러리 버전은 실행 환경을 구성하고 검증한 뒤 고정합니다.
+개발 PC에서 Python 3.12.14, Streamlit 1.66.1, pandas 3.1.0의 가져오기와 `pip check`를 통과했습니다. 설치 패키지 버전은 `requirements.txt`에 고정했습니다.
+
+팀 저장소: [rnxodnd/honsal-index](https://github.com/rnxodnd/honsal-index)
 
 ## 팀 역할
 
-| 담당 | 주요 역할 |
+| 구성원 | 담당 |
 | --- | --- |
-| A · 데이터 | 데이터 수집·정제, 행정코드·좌표 확인, 출처 관리 |
-| B · 점수 및 추천 | 지표 표준화, 가중치 계산, 순위와 추천 근거 생성 |
-| C · 화면 | 지도, 지역 비교, 사용자 입력과 계산 결과 연결 |
-| D · 통합 및 발표 | 일정 관리, 통합 검증, 실행 안내, 발표자료, 제출 |
+| 팀장 | 백엔드, 점수·추천 로직, 기술 통합 |
+| 팀원 1 | 기획, 발표자료, 사용자 검증, 제출 관리 |
+| 팀원 2 | 프론트엔드, 지도·비교 화면, 계산 결과 연결 |
+| 팀원 3 | 데이터 수집·정제, 지역 코드·좌표·출처 관리 |
 
-실제 팀원의 이름은 역할 확정 후 반영합니다.
+담당 파일, 첫 작업, 산출물과 전달 시점은 [팀 역할 분담](docs/team-roles.md)에 정리했습니다.
 
 ## 개발 일정
 
@@ -127,41 +129,65 @@ AI 질의응답과 추가 도시 지원은 핵심 기능 완성 후 검토합니
 
 ## 프로젝트 구조
 
+담당자별 저장 위치, 현재 준비 상태와 첫 작업은 [폴더 이용 가이드](docs/folder-guide.md)를 참고합니다.
+
 ```text
 honsal-index/
-├── README.md
-├── app/                     # 웹 화면
-├── src/                     # 데이터 처리 및 점수 계산
-├── config/
-│   └── weights.json         # 기본 가중치 설정
-├── data/
-│   ├── raw/                 # 수집 원본 데이터
-│   └── processed/           # 정제·집계 데이터
-├── notebooks/               # 데이터 탐색 및 실험
-└── docs/
-    ├── development-plan.md  # 전체 개발 방향
-    └── 23-hour-plan.md      # 시간대별 실행 계획
+├── README.md                 # 프로젝트 개요와 개발 환경 결정
+├── requirements.txt          # 팀 공용 패키지 버전 목록
+├── .python-version           # Python 3.12 지정
+├── .venv/                    # 각 PC의 가상환경 (Git 제외)
+├── docs/                     # 원본 기획안과 개발 계획
+├── config/weights.json       # 기획안의 기본 가중치 초안
+├── data/raw/                 # 수집 원본 데이터
+├── data/processed/           # 정제·집계한 데이터
+├── notebooks/                # 데이터 탐색과 Colab 실험
+├── src/                      # 데이터 처리·점수 계산 코드 예정
+├── app/                      # 웹 화면 코드 예정
+└── .vscode/                  # 권장 확장과 가상환경 경로 설정
 ```
 
-## 실행 안내
+VS Code의 **파일 → 폴더 열기**에서 이 `honsal-index` 폴더를 선택하면 됩니다. Python 확장과 Python 실행 환경은 별개이며, 각 팀원은 위 설치 절차로 자기 PC에 가상환경을 구성합니다.
 
-현재는 프로젝트 준비 단계이며, 실행 가능한 앱 코드는 아직 구현되지 않았습니다.
+## 개발 환경 설치
 
-프로그램 구현 후 다음 내용을 추가합니다.
+**Python 3.12와 Git을 먼저 설치합니다.** `.venv/`는 각자의 컴퓨터에서 만들고 GitHub에는 올리지 않습니다. 공유하는 `requirements.txt`로 같은 패키지 버전을 설치합니다. 아래 Clone 명령은 처음 내려받을 때만 사용하며, 이미 Clone했다면 해당 폴더에서 가상환경 생성 단계부터 진행합니다.
 
-- 지원하는 Python 버전과 운영체제
-- 의존성 설치 방법
-- 필요한 데이터와 환경 설정
-- 프로그램 실행 명령
-- 주요 사용 방법
+macOS / Linux:
 
-최종 제출 전에는 **다른 팀원 PC에서 README의 안내만으로 실행 가능한지** 확인합니다.
+```bash
+git clone https://github.com/rnxodnd/honsal-index.git
+cd honsal-index
+python3.12 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python -m pip check
+.venv/bin/python -c "import sys, streamlit, pandas; assert sys.version_info[:2] == (3, 12); assert sys.prefix != sys.base_prefix; print('Python:', sys.version.split()[0]); print('Streamlit:', streamlit.__version__); print('pandas:', pandas.__version__)"
+```
+
+Windows PowerShell:
+
+```powershell
+git clone https://github.com/rnxodnd/honsal-index.git
+cd honsal-index
+py -3.12 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m pip check
+.\.venv\Scripts\python.exe -c "import sys, streamlit, pandas; assert sys.version_info[:2] == (3, 12); assert sys.prefix != sys.base_prefix; print('Python:', sys.version.split()[0]); print('Streamlit:', streamlit.__version__); print('pandas:', pandas.__version__)"
+```
+
+위 명령은 가상환경의 Python을 직접 사용하므로 별도 활성화가 필요 없습니다. 이미 `.venv`가 있다면 먼저 해당 Python의 `--version`으로 3.12인지 확인합니다. 다른 버전의 환경에 덮어 설치하지 않습니다.
+
+VS Code에서는 프로젝트 폴더를 연 뒤 명령 팔레트의 **Python: Select Interpreter**에서 `.venv`의 Python 3.12를 선택합니다. 공유 설정에 기본 경로가 포함되어 있지만, 기존에 다른 인터프리터를 선택한 PC에서는 직접 다시 선택해야 합니다.
+
+현재는 환경 준비 단계이며 실행할 웹 앱 진입점은 아직 없습니다. 앱 구현 후 이 문서에 실행 명령을 추가합니다. macOS 개발 환경에서 검증했으며 Windows·Linux에서의 실제 설치 확인은 각 팀원이 진행합니다.
 
 ## 진행 현황
 
 - [x] 프로젝트 주제 및 기본 평가 항목 정리
 - [x] 프로젝트 폴더와 기본 가중치 설정 준비
 - [x] 4인 역할 및 23시간 개발 계획 작성
+- [x] 개발 PC의 Python 3.12 가상환경·패키지 구성 및 의존성 검사
+- [x] 팀원용 설치 명령과 공용 패키지 버전 목록 작성
 - [ ] 실제 대상 도시와 데이터 확정
 - [ ] 데이터 정제 및 점수 계산 구현
 - [ ] 지도·지역 비교 화면 구현
@@ -174,3 +200,7 @@ honsal-index/
 
 - [전체 개발 계획](docs/development-plan.md)
 - [23시간 완성 계획](docs/23-hour-plan.md)
+
+- [팀 역할 분담](docs/team-roles.md)
+- [폴더 이용 가이드](docs/folder-guide.md)
+- [원본 기획안](docs/혼살지수_1인가구_생활편의점수_시스템.pdf)

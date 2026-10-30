@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "status": "proposal_draft",
+  "source": "docs/혼살지수_1인가구_생활편의점수_시스템.pdf",
+  "score_range": [0, 100],
+  "score_direction": "higher_is_better",
+  "weights": {
+    "daily_life": 0.25,
+    "transport": 0.20,
+    "healthcare": 0.15,
+    "safety": 0.15,
+    "housing_affordability": 0.15,
+    "leisure_community": 0.10
+  },
+  "labels": {
+    "daily_life": "생활시설",
+    "transport": "교통",
+    "healthcare": "의료",
+    "safety": "안전 관련 인프라",
+    "housing_affordability": "주거부담 완화",
+    "leisure_community": "여가·커뮤니티"
+  }
+}

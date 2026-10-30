@@ -1,9 +1,11 @@
 """네트워크·추가 테스트 패키지 없이 실제 ASGI 요청 경계를 검증합니다."""
 
 import json
+from pathlib import Path
+import tempfile
 import unittest
 
-from src.api import MAX_BODY_BYTES, create_app
+from src.api import MAX_BODY_BYTES, PROJECT_DIR, create_app
 from src.scoring.accessibility import AnalysisError
 
 
@@ -103,13 +105,61 @@ class ApiTests(unittest.IsolatedAsyncioTestCase):
             status, body = await request(self.app, path)
             self.assertEqual(status, expected)
             self.assertIn("error", json.loads(body))
-        for path in ("/", "/js/map.js", "/css/style.css"):
+        for path in ("/", "/js/map.js", "/js/grid.js", "/js/transport.js", "/js/analysis.js", "/css/style.css"):
             status, body = await request(self.app, path)
             self.assertEqual(status, 200)
             self.assertGreater(len(body), 0)
+        status, _ = await request(self.app, "/app/index.html")
+        self.assertEqual(status, 404)
         # 정제 원본과 설정 파일은 정적 웹 루트에 노출하지 않습니다.
         status, _ = await request(self.app, "/data/processed/chuncheon_facilities_classified.csv")
         self.assertEqual(status, 404)
+
+    async def test_existing_grid_ui_can_load_only_its_explicit_input_files(self):
+        for filename, expected_header in (
+            ("grid_500m_bounds.csv", "grid_id"),
+            ("chuncheon_medical_facilities.csv", "facility_id"),
+            ("chuncheon_hospitals.csv", "facility_id"),
+        ):
+            with self.subTest(filename=filename):
+                status, body = await request(self.app, f"/data/{filename}")
+                self.assertEqual(status, 200)
+                self.assertIn(expected_header, body.decode("utf-8-sig").splitlines()[0].split(","))
+        status, _ = await request(self.app, "/data/chuncheon_facilities_classified.csv")
+        self.assertEqual(status, 404)
+
+    async def test_optional_bus_route_file_is_served_only_when_present(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            (root / "app" / "data").mkdir(parents=True)
+            app = create_app(FixtureEngine(), project_dir=root)
+            path = "/data/chuncheon_bus.json"
+            status, _ = await request(app, path)
+            self.assertEqual(status, 404)
+            # 경로 제공 여부 검증용이며 실제 노선 자료로 배포하지 않습니다.
+            fixture = {"version": 1, "meta": {"dates": ["fixture"]}, "stops": [], "routes": []}
+            (root / "app" / "data" / "chuncheon_bus.json").write_text(json.dumps(fixture))
+            status, body = await request(app, path)
+            self.assertEqual(status, 200)
+            self.assertEqual(json.loads(body), fixture)
+            status, _ = await request(create_app(FixtureEngine(), project_dir=root, serve_ui=False), path)
+            self.assertEqual(status, 404)
+
+    def test_static_ui_data_matches_backend_canonical_data(self):
+        for name in ("grid_500m_bounds.csv", "chuncheon_medical_facilities.csv", "chuncheon_hospitals.csv"):
+            with self.subTest(filename=name):
+                self.assertTrue(
+                    (PROJECT_DIR / "app" / "data" / name).read_bytes()
+                    == (PROJECT_DIR / "data" / "processed" / name).read_bytes(),
+                    f"UI와 API가 서로 다른 자료를 사용합니다: {name}",
+                )
+
+    async def test_api_only_entry_does_not_enable_ui_csv_routes(self):
+        app = create_app(FixtureEngine(), serve_ui=False)
+        for path in ("/", "/data/grid_500m_bounds.csv", "/data/chuncheon_medical_facilities.csv"):
+            with self.subTest(path=path):
+                status, _ = await request(app, path)
+                self.assertEqual(status, 404)
 
 
 if __name__ == "__main__":

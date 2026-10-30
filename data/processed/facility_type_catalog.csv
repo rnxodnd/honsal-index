@@ -1,4 +1,15 @@
 ﻿analysis_category,analysis_category_label,analysis_subtype,facility_count,located_count
+daily_life,생활시설,독서실/스터디카페,58,58
+daily_life,생활시설,목욕탕/사우나,17,17
+daily_life,생활시설,문구/회화용품 소매업,59,59
+daily_life,생활시설,미용실,900,900
+daily_life,생활시설,복사업,19,19
+daily_life,생활시설,세탁소,157,157
+daily_life,생활시설,셀프 빨래방,26,26
+daily_life,생활시설,슈퍼마켓,382,382
+daily_life,생활시설,자동차 대여업,26,26
+daily_life,생활시설,편의점,403,403
+daily_life,생활시설,화장품 소매업,153,153
 healthcare,의료,병원,4,4
 healthcare,의료,보건소,1,1
 healthcare,의료,보건지소,10,10
@@ -11,5 +22,20 @@ healthcare,의료,종합병원,2,2
 healthcare,의료,치과의원,88,88
 healthcare,의료,한방병원,1,1
 healthcare,의료,한의원,67,67
+leisure_community,여가시설,PC방,44,44
+leisure_community,여가시설,골프 연습장,68,68
+leisure_community,여가시설,기타 오락장,29,29
+leisure_community,여가시설,낚시터 운영업,11,11
+leisure_community,여가시설,노래방,158,158
+leisure_community,여가시설,당구장,77,77
+leisure_community,여가시설,바둑/장기/체스 경기 운영업,4,4
+leisure_community,여가시설,볼링장,7,7
+leisure_community,여가시설,수상/해양 레저업,22,22
+leisure_community,여가시설,수영장,6,6
+leisure_community,여가시설,스쿼시/라켓볼장,1,1
+leisure_community,여가시설,전자 게임장,26,26
+leisure_community,여가시설,탁구장,16,16
+leisure_community,여가시설,테니스장,23,23
+leisure_community,여가시설,헬스장,140,140
 transport,교통,버스정류장,1890,1890
 transport,교통,철도역,6,6

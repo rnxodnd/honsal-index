@@ -1,5 +1,5 @@
 ﻿analysis_category,analysis_category_label,status,status_label,facility_count,subtype_count,located_count
-daily_life,생활시설,awaiting_data,자료 준비 중,,,
+daily_life,생활시설,classified,분류 완료,2200,11,2200
 healthcare,의료,classified,분류 완료,524,12,524
 transport,교통,classified,분류 완료,1896,2,1896
-leisure_community,여가시설,awaiting_data,자료 준비 중,,,
+leisure_community,여가시설,classified,분류 완료,632,15,632

@@ -114,6 +114,10 @@ def build_classified(data_dir: Path = DATA_DIR, commerce: Path | None = None) ->
     frames = [classify_existing(read_facilities(data_dir / name)) for name in (
         "chuncheon_medical_facilities.csv", "chuncheon_transport_facilities.csv",
     )]
+    if commerce is None:
+        default_commerce = data_dir / "chuncheon_commerce_facilities.csv"
+        if default_commerce.is_file():
+            commerce = default_commerce
     if commerce is not None:
         shops = read_facilities(commerce)
         needed = {"analysis_category", "analysis_subtype", "source_business_code", "source_business_name"}
@@ -130,7 +134,7 @@ def build_classified(data_dir: Path = DATA_DIR, commerce: Path | None = None) ->
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--commerce", type=Path, help="공통 형식으로 분류된 상권 CSV")
+    parser.add_argument("--commerce", type=Path, help="공통 형식 상권 CSV (생략 시 기본 상권 파일 자동 포함)")
     args = parser.parse_args()
     facilities = build_classified(commerce=args.commerce)
     outputs = {

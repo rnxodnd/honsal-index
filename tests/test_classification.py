@@ -81,6 +81,10 @@ class ClassificationTests(unittest.TestCase):
             result = build_classified(root, path)
             self.assertEqual(len(result), 3)
             self.assertEqual(result.loc[result.facility_id.eq("shop:1"), "source_business_code"].iloc[0], "TEST_BOWLING")
+            shop.to_csv(root / "chuncheon_commerce_facilities.csv", index=False, encoding="utf-8-sig")
+            pd.testing.assert_frame_equal(
+                result.drop(columns="input_dataset"), build_classified(root).drop(columns="input_dataset")
+            )
             shop["source_business_code"] = ""
             shop.to_csv(path, index=False, encoding="utf-8-sig")
             with self.assertRaises(ValueError):

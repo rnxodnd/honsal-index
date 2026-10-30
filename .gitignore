@@ -24,5 +24,8 @@ data/processed/*
 !data/processed/chuncheon_facilities_classified.csv
 !data/processed/facility_type_catalog.csv
 !data/processed/facility_dataset_status.csv
+!data/processed/chuncheon_daily_life.csv
+!data/processed/chuncheon_leisure.csv
+!data/processed/chuncheon_commerce_facilities.csv
 !data/processed/grid_500m_filtered.csv
 !data/processed/grid_500m_filtered.geojson

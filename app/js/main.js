@@ -82,14 +82,21 @@
   });
 
   function switchView(view) {
-    const isCompare = view === "compare";
-    $("explore").hidden = isCompare;
-    $("compareView").hidden = !isCompare;
-    $("localDataSection").hidden = isCompare;
+    if (!["explore", "compare", "routes"].includes(view)) return;
+    $("explore").hidden = view !== "explore";
+    $("compareView").hidden = view !== "compare";
+    $("localDataSection").hidden = view !== "explore";
+    $("routesView").hidden = view !== "routes";
     document.querySelectorAll("[data-view]").forEach(button => button.classList.toggle("active", button.dataset.view === view));
     window.scrollTo({top: 0, behavior: "smooth"});
-    if (!isCompare) window.setTimeout(() => window.HonsalMap?.relayout(), 100);
+    if (view === "compare") renderCompare();
+    if (view === "explore") window.setTimeout(() => window.HonsalMap?.relayout(), 100);
   }
+  window.HonsalUI = {switchView};
+  document.querySelector(".brand")?.addEventListener("click", event => {
+    event.preventDefault();
+    switchView("explore");
+  });
   document.querySelectorAll("[data-view]").forEach(button => button.addEventListener("click", () => switchView(button.dataset.view)));
   $("backToMap").addEventListener("click", () => switchView("explore"));
 

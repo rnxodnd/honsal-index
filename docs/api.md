@@ -22,9 +22,9 @@ API만 실행할 때는 `src.public_api:app --host 127.0.0.1 --port 8001`을 사
 | `src/public_api.py` | API 전용 실행, 허용한 배포 화면의 CORS 설정 |
 | `src/scoring/accessibility.py` | 자료 읽기, 위치·격자 확인, 최근접 거리·유형별 점수 |
 | `src/scoring/preferences.py` | 선택 유형 검증, 항목 평균, 가중치 재조정 |
-| `app/app/index.html`, `app/app/js/map.js` | 기존 디자인의 UI, 지도 검색·시설 마커 표시 |
-| `app/app/js/analysis.js` | 네 항목 선택, API 호출, 점수·개수·전체 상호명 목록 표시 |
-| `app/app/js/main.js` | 실제 분석 응답을 저장하는 두 위치 비교 |
+| `app/index.html`, `app/js/map.js` | 기존 디자인의 UI, 지도 검색·시설 마커 표시 |
+| `app/js/analysis.js` | 네 항목 선택, API 호출, 점수·개수·전체 상호명 목록 표시 |
+| `app/js/main.js` | 실제 분석 응답을 저장하는 두 위치 비교 |
 
 서버는 시작할 때 다음 네 파일을 읽습니다. 자료나 가중치를 수정한 뒤에는 서버를 재시작합니다.
 

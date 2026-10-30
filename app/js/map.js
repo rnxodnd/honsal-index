@@ -2,7 +2,6 @@
   "use strict";
 
   const $ = id => document.getElementById(id);
-
   const put = (id, value) => {
     $(id).textContent = value;
   };
@@ -47,10 +46,10 @@
   };
 
   function node(tag, value = "", className = "") {
-    const element = document.createElement(tag);
-    element.textContent = value;
-    element.className = className;
-    return element;
+    const el = document.createElement(tag);
+    el.textContent = value;
+    el.className = className;
+    return el;
   }
 
   function removeAnalysisLayers() {
@@ -172,7 +171,6 @@
     return paintAnalysis();
   }
 
-  // 응답이 오지 않는 경우에도 로딩 상태가 끝나도록 처리
   function request(start, done) {
     let finished = false;
 
@@ -213,16 +211,14 @@
     const value = String(phone || "").trim();
     const number = value.replace(/[^0-9+]/g, "");
 
-    const element = node(
+    const el = node(
       number ? "a" : "span",
       value || "전화번호 미등록"
     );
 
-    if (number) {
-      element.href = "tel:" + number;
-    }
+    if (number) el.href = "tel:" + number;
 
-    return element;
+    return el;
   }
 
   function detailsLink(url) {
@@ -265,7 +261,6 @@
     };
   }
 
-  // 지도 말풍선: 주소만 작게 표시
   function addressBubble(address) {
     const bubble = node(
       "div",
@@ -300,7 +295,6 @@
       return false;
     }
 
-    // 이전 검색·주소 응답이 새 선택을 덮어쓰지 않도록 구분
     searchId++;
     const token = ++selectionId;
 
@@ -323,9 +317,11 @@
     }
 
     info.close();
+
     info.setContent(
       addressBubble(location.address || "주소 확인 중…")
     );
+
     info.open(map, marker);
 
     put(
@@ -539,9 +535,7 @@
 
           const link = detailsLink(item.place_url);
 
-          if (link) {
-            actions.append(link);
-          }
+          if (link) actions.append(link);
 
           card.append(button, address, actions);
           $("nearbyResults").append(card);
@@ -604,7 +598,6 @@
     }
 
     keyword = String(keyword || "").trim();
-
     if (!keyword) return;
 
     const token = ++searchId;
@@ -613,9 +606,7 @@
     put("searchMessage", "검색 중…");
 
     request(
-      done => {
-        geocoder.addressSearch(keyword, done);
-      },
+      done => geocoder.addressSearch(keyword, done),
       (items, status) => {
         if (token !== searchId) return;
 
@@ -638,9 +629,7 @@
         }
 
         request(
-          done => {
-            places.keywordSearch(keyword, done);
-          },
+          done => places.keywordSearch(keyword, done),
           (results, state) => {
             if (token !== searchId) return;
 
@@ -683,6 +672,24 @@
       return analysisResult ? analysisResult.facilities.length : 0;
     },
 
+    getMap() {
+      return ready ? map : null;
+    },
+
+    // 정류장을 눌러도 분석 기준점과 격자는 바꾸지 않습니다.
+    focusTransport(lat, lng) {
+      if (
+        !ready ||
+        !Number.isFinite(lat) ||
+        !Number.isFinite(lng)
+      ) {
+        return;
+      }
+
+      info.close();
+      map.panTo(new kakao.maps.LatLng(lat, lng));
+    },
+
     wholeGangwon() {
       if (!ready) return;
 
@@ -693,6 +700,7 @@
       map.setCenter(
         new kakao.maps.LatLng(37.75, 128.1)
       );
+
       map.setLevel(11);
 
       put(
@@ -756,9 +764,7 @@
   );
 
   $("useMapCenter").addEventListener("click", () => {
-    if (ready) {
-      chooseCoordinates(map.getCenter());
-    }
+    if (ready) chooseCoordinates(map.getCenter());
   });
 
   window.addEventListener("resize", () => {
@@ -804,27 +810,21 @@
       kakao.maps.event.addListener(
         marker,
         "click",
-        () => {
-          info.open(map, marker);
-        }
+        () => info.open(map, marker)
       );
 
       kakao.maps.event.addListener(
         map,
         "click",
-        event => {
-          chooseCoordinates(event.latLng);
-        }
+        event => chooseCoordinates(event.latLng)
       );
 
       ready = true;
 
-      // 기존 grid.js 연결
       window.HonsalGrid?.attach(map);
-
       goToRegion("chuncheon");
 
-      // API 응답이 SDK 준비보다 먼저 도착했다면 보관한 시설을 표시합니다.
+      // SDK 준비 전에 받은 API 응답도 지도에 표시합니다.
       if (analysisResult) paintAnalysis();
 
       document.dispatchEvent(

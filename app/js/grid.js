@@ -1,12 +1,11 @@
 (() => {
   "use strict";
 
-  const $ = (id) => document.getElementById(id);
+  const $ = id => document.getElementById(id);
   const say = (id, value) => {
     $(id).textContent = value;
   };
 
-  // 팀 가이드의 EPSG:5179 정의
   const DEFINITION =
     "+proj=tmerc +lat_0=38 +lon_0=127.5 +k=0.9996 " +
     "+x_0=1000000 +y_0=2000000 +ellps=GRS80 +units=m +no_defs";
@@ -15,13 +14,28 @@
   let selected;
   let loading = false;
   let loaded = false;
-
   let grids = new Map();
   let polygons = [];
   let selectedIds = [];
   let lastPosition = "";
+  let phase = "idle";
 
-  // CSV의 따옴표, 쉼표, 줄바꿈 처리
+  function state() {
+    return {
+      phase,
+      ids: [...selectedIds],
+      message: $("gridStatus").textContent
+    };
+  }
+
+  function publish() {
+    document.dispatchEvent(
+      new CustomEvent("honsal:grid", {
+        detail: state()
+      })
+    );
+  }
+
   function parseCSV(source) {
     const rows = [];
     let row = [];
@@ -141,7 +155,7 @@
     return result;
   }
 
-  // 위경도 → EPSG:5179 → 500m 격자 ID
+  // 지도와 교통 필터가 같은 격자 계산을 사용합니다.
   function gridId(lat, lng) {
     const [x, y] = proj4(
       "EPSG:4326",
@@ -159,7 +173,6 @@
     return `G500_${gridX}_${gridY}`;
   }
 
-  // 중앙 격자와 주변 8개 격자 ID
   function neighbors(id) {
     const [, x, y] = id.split("_").map(Number);
     const ids = [];
@@ -181,7 +194,6 @@
     selectedIds = [];
   }
 
-  // 선택 위치의 격자 그리기
   function render() {
     if (!loaded || !map || !selected) return;
 
@@ -199,6 +211,7 @@
       const center = grids.get(id);
 
       if (!center) {
+        phase = "outside";
         say(
           "gridStatus",
           "선택 위치는 CSV의 격자 데이터 제공 범위 밖입니다."
@@ -206,8 +219,9 @@
         return;
       }
 
-      // 실제 CSV에 존재하는 격자만 사용
-      selectedIds = neighbors(id).filter(key => grids.has(key));
+      selectedIds = neighbors(id).filter(
+        key => grids.has(key)
+      );
 
       say("gridAdmin", center.adm_nm || "정보 없음");
 
@@ -246,8 +260,6 @@
             g.is_populated === "1" ? "#3b82f6" : "#cbd5e1",
           fillOpacity: 0.25,
           zIndex: key === id ? 2 : 1,
-
-          // 격자 위에서도 기존 지도 클릭이 동작하도록 설정
           clickable: false
         });
 
@@ -258,14 +270,17 @@
         polygons.push(polygon);
       });
 
+      phase = "ready";
       $("gridFit").disabled = false;
     } catch (error) {
       clear();
+      phase = "error";
       say("gridStatus", "격자 표시 실패: " + error.message);
+    } finally {
+      publish();
     }
   }
 
-  // CSV 로딩
   async function load() {
     if (loading) return;
 
@@ -286,7 +301,9 @@
       say(id, "—");
     }
 
+    phase = "loading";
     say("gridStatus", "격자 데이터를 불러오는 중입니다…");
+    publish();
 
     const controller = new AbortController();
     const timer = setTimeout(() => {
@@ -321,9 +338,10 @@
         grids.size.toLocaleString("ko-KR") + "개"
       );
 
-      // 파일 로딩 중 위치가 바뀌었다면 최신 위치를 표시
       render();
     } catch (error) {
+      phase = "error";
+
       say(
         "gridStatus",
         error.name === "AbortError"
@@ -335,6 +353,7 @@
       clearTimeout(timer);
       loading = false;
       $("gridReload").disabled = false;
+      publish();
     }
   }
 
@@ -352,7 +371,6 @@
 
           const key = selected.lat + "," + selected.lng;
 
-          // 주소만 갱신되는 경우 같은 격자를 다시 그리지 않음
           if (lastPosition === key) return;
 
           lastPosition = key;
@@ -397,7 +415,15 @@
       load();
     },
 
-    // 추후 시설 데이터의 grid_id 필터링에 사용 가능
+    getState: state,
+
+    getGridId(lat, lng) {
+      if (!loaded) return null;
+      return gridId(lat, lng);
+    },
+
+    retry: load,
+
     getSelectedIds() {
       return [...selectedIds];
     }

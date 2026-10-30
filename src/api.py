@@ -129,17 +129,22 @@ def create_app(engine=None, project_dir: Path = PROJECT_DIR, *, serve_ui: bool =
     ]
     if serve_ui:
         async def ui_data(request):
-            # 기존 격자·의료 선택 화면에서 사용하는 파일만 명시적으로 제공합니다.
+            # 정적 미리보기와 API 실행 모두 동일한 정제 자료를 사용합니다.
             filename = request.path_params["filename"]
-            if filename not in {"grid_500m_bounds.csv", "chuncheon_medical_facilities.csv"}:
+            inputs = {
+                name: project_dir / "data" / "processed" / name
+                for name in ("grid_500m_bounds.csv", "chuncheon_medical_facilities.csv", "chuncheon_hospitals.csv")
+            }
+            # 노선 JSON은 팀원이 확보한 경우에만 제공합니다. 미확보를 빈 노선으로 만들지 않습니다.
+            inputs["chuncheon_bus.json"] = project_dir / "app" / "data" / "chuncheon_bus.json"
+            path = inputs.get(filename)
+            if path is None or not path.is_file():
                 raise HTTPException(404)
-            path = project_dir / "data" / "processed" / filename
-            if not path.is_file():
-                raise HTTPException(404)
-            return FileResponse(path, media_type="text/csv; charset=utf-8")
+            media_type = "application/json" if path.suffix == ".json" else "text/csv; charset=utf-8"
+            return FileResponse(path, media_type=media_type)
 
         routes.append(Route("/data/{filename}", ui_data, methods=["GET"]))
-        routes.append(Mount("/", app=StaticFiles(directory=project_dir / "app/app", html=True)))
+        routes.append(Mount("/", app=StaticFiles(directory=project_dir / "app", html=True)))
     application = Starlette(
         routes=routes,
         lifespan=lifespan,

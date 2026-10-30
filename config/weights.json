@@ -1,23 +1,20 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "status": "proposal_draft",
-  "source": "docs/혼살지수_1인가구_생활편의점수_시스템.pdf",
+  "source": "2026-10-30 사용자 확정 범위: 생활시설·의료·교통·여가시설",
+  "weight_basis": "남은 네 항목의 기존 상대 비중 25:15:20:10을 합계 1로 재조정한 초안",
   "score_range": [0, 100],
   "score_direction": "higher_is_better",
   "weights": {
-    "daily_life": 0.25,
-    "transport": 0.20,
-    "healthcare": 0.15,
-    "safety": 0.15,
-    "housing_affordability": 0.15,
-    "leisure_community": 0.10
+    "daily_life": 0.35714285714285715,
+    "healthcare": 0.21428571428571427,
+    "transport": 0.2857142857142857,
+    "leisure_community": 0.14285714285714285
   },
   "labels": {
     "daily_life": "생활시설",
     "transport": "교통",
     "healthcare": "의료",
-    "safety": "안전 관련 인프라",
-    "housing_affordability": "주거부담 완화",
-    "leisure_community": "여가·커뮤니티"
+    "leisure_community": "여가시설"
   }
 }

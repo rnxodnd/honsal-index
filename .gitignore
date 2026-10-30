@@ -17,3 +17,6 @@ data/processed/*
 !data/processed/chuncheon_hospitals.csv
 !data/processed/chuncheon_pharmacies.csv
 !data/processed/chuncheon_medical_facilities.csv
+!data/processed/chuncheon_bus_stops.csv
+!data/processed/chuncheon_rail_stations.csv
+!data/processed/chuncheon_transport_facilities.csv

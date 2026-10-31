@@ -98,12 +98,18 @@ API 전용 서버의 기본 CORS 허용 출처는 `https://unique-dusk-66f82f.ne
 
 ### 현재 테스트 브랜치를 pull한 뒤 직접 업로드
 
-2026-10-30 테스트용 공개 API 주소는 `https://med-permanent-ceremony-codes.trycloudflare.com`입니다. 추적되는 `app/js/runtime-config.js`에 이 주소를 넣어 **기존 `https://unique-dusk-66f82f.netlify.app`에서만** 기본값으로 사용합니다. 로컬에서는 같은 서버의 API를 쓰고, 별도로 지정한 `window.HONSAL_API_BASE_URL`은 우선 적용합니다.
+2026-10-31 복구한 공개 API 주소는 `https://sender-sweet-contains-searched.trycloudflare.com`입니다. 추적되는 `app/js/runtime-config.js`에 이 주소를 넣어 **기존 `https://unique-dusk-66f82f.netlify.app`에서만** 기본값으로 사용합니다. 로컬에서는 같은 서버의 API를 쓰고, 별도로 지정한 `window.HONSAL_API_BASE_URL`은 우선 적용합니다.
 
-이미 `codex/ui-facility-results`에 있는 팀원은 프로젝트 폴더에서 다음 명령으로 갱신합니다.
+이번 연결 복구 브랜치는 `codex/reconnect-netlify-api`입니다. 팀원은 VS Code의 프로젝트 터미널에서 다음 명령으로 받습니다. 앞 단계가 성공했을 때만 다음 단계를 실행합니다.
 
 ```powershell
-git pull --ff-only origin codex/ui-facility-results
+git fetch origin
+if ($LASTEXITCODE -eq 0) {
+    git switch codex/reconnect-netlify-api
+    if ($LASTEXITCODE -eq 0) {
+        git pull --ff-only origin codex/reconnect-netlify-api
+    }
+}
 ```
 
 Netlify 기존 프로젝트의 **Deploys → 수동 업로드 영역**에 최신 `app` 폴더를 올린 뒤 `Ctrl + Shift + R`로 새로고침합니다. `app/index.html`과 `css`, `js`, `data`가 함께 포함되어야 합니다. 이 테스트 방법은 빌드 없이도 API 주소가 적용됩니다. Git pull은 Netlify 사이트를 자동 갱신하지 않으며, 이전에 만든 `app/dist`도 갱신하지 않습니다. 예전 `dist`를 재사용하려면 아래 빌드부터 다시 실행해야 합니다.
@@ -112,14 +118,14 @@ Netlify 기존 프로젝트의 **Deploys → 수동 업로드 영역**에 최신
 
 ### 빌드 후 배포 또는 Git 자동 배포
 
-GitHub 연동 배포에서는 `codex/ui-facility-results`를 배포 브랜치로 선택합니다. 루트 `netlify.toml`이 다음 설정을 적용합니다.
+GitHub 연동 배포에서는 `codex/reconnect-netlify-api`를 배포 브랜치로 선택합니다. 루트 `netlify.toml`이 다음 설정을 적용합니다.
 
 | 설정 | 값 |
 | --- | --- |
 | Base directory | `app` |
 | Build command | `node ../scripts/build-netlify.mjs` |
 | Publish directory | `dist` (Base directory 기준) |
-| 환경변수 | `HONSAL_API_BASE_URL` = 실행 중인 HTTPS API의 기본 주소 |
+| 환경변수 | `HONSAL_API_BASE_URL` = `https://sender-sweet-contains-searched.trycloudflare.com` |
 
 Netlify **Project configuration → Environment variables**에서 변수를 추가합니다. 범위를 선택할 수 있으면 **Builds**를 포함합니다. 주소 끝에 `/api`, 경로, 쿼리를 붙이지 않습니다. 저장한 뒤 Deploys에서 재배포합니다. 이전 안내의 빈 빌드 명령·게시 경로 `.` 대신 위 설정을 사용합니다.
 
@@ -130,6 +136,10 @@ Netlify **Project configuration → Environment variables**에서 변수를 추�
 새 사이트 주소를 사용한다면 카카오 JavaScript 키의 허용 도메인과 백엔드 CORS 허용 출처도 함께 등록합니다. Quick Tunnel은 PC·서버·터널이 실행 중일 때만 사용할 수 있는 임시 테스트 주소입니다.
 
 ## 5. 검증과 변경 범위
+
+2026-10-31 연결 복구는 최종 main `eb0c49f`를 기준으로 진행했습니다. 실행 코드에서는 `app/js/runtime-config.js`의 공개 API 주소만 바꿨으며 UI·점수 산식·데이터는 그대로입니다. 공개 `/api/health`·`/api/options`·`/api/analyze` 응답과 기존 Netlify 출처의 CORS 허용을 확인했습니다. 최종 UI와 실제 HTTPS API를 연결한 브라우저 검사에서 시설 선택 40종, 춘천시청 위치(경도 127.7298·위도 37.8813)의 당구장·볼링장 선택 결과 66.8점(원점수 66.77)과 시설 12곳을 확인했습니다. 이 결과는 배포 전 연결 검사이며, GitHub 업로드만으로 기존 수동 배포 사이트가 갱신되지는 않습니다.
+
+### 이전 연결 검증 기록 (2026-10-30, 현재 점수 기준과 다름)
 
 2026-10-30 로컬 5500 서버에서 Python 테스트 65개와 실제 브라우저 검증을 통과했습니다. Netlify 빌드·API 주소 설정 Node 테스트 6개도 통과했습니다. 원본 `app` 폴더와 빌드 산출물을 각각 기존 사이트 출처로 불러오는 브라우저 검사에서 공개 HTTPS API 호출·시설 유형 40종·67.8점·시설 12곳·카카오 지도 로딩을 확인했습니다. 이 검사는 실제 Netlify 사이트를 재배포하지 않고 수행했습니다.
 

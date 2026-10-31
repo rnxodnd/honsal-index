@@ -764,6 +764,23 @@ summary:focus-visible {
 
 .poi-grid { display: grid; gap: 12px; }
 
+/* 주변 시설은 카드 약 3개 높이 안에서 목록별로 스크롤합니다. */
+.facility-scroll-list {
+  max-height: 35rem;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-gutter: stable;
+  grid-auto-rows: max-content;
+  align-content: start;
+  padding: 2px;
+}
+
+.facility-scroll-list:focus-visible {
+  outline: 3px solid #76d0aa;
+  outline-offset: 2px;
+  border-radius: 14px;
+}
+
 .poi-card {
   padding: 16px;
   border: 1px solid #e8efeb;

@@ -14,7 +14,7 @@ function apiBaseFor(origin, override) {
 }
 
 test("수동 업로드한 기존 Netlify 화면은 공개 테스트 API에 연결한다", () => {
-  assert.equal(apiBaseFor(testSite), "https://sender-sweet-contains-searched.trycloudflare.com");
+  assert.equal(apiBaseFor(testSite), "https://villages-don-clips-archived.trycloudflare.com");
 });
 
 test("로컬 서버와 다른 사이트는 임시 API로 연결하지 않는다", () => {

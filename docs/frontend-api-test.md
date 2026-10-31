@@ -98,7 +98,7 @@ API 전용 서버의 기본 CORS 허용 출처는 `https://unique-dusk-66f82f.ne
 
 ### 현재 테스트 브랜치를 pull한 뒤 직접 업로드
 
-2026-10-31 복구한 공개 API 주소는 `https://sender-sweet-contains-searched.trycloudflare.com`입니다. 추적되는 `app/js/runtime-config.js`에 이 주소를 넣어 **기존 `https://unique-dusk-66f82f.netlify.app`에서만** 기본값으로 사용합니다. 로컬에서는 같은 서버의 API를 쓰고, 별도로 지정한 `window.HONSAL_API_BASE_URL`은 우선 적용합니다.
+2026-10-31 11:22(KST)에 재생성된 공개 API 주소는 `https://villages-don-clips-archived.trycloudflare.com`입니다. 추적되는 `app/js/runtime-config.js`에 이 주소를 넣어 **기존 `https://unique-dusk-66f82f.netlify.app`에서만** 기본값으로 사용합니다. 로컬에서는 같은 서버의 API를 쓰고, 별도로 지정한 `window.HONSAL_API_BASE_URL`은 우선 적용합니다.
 
 이번 연결 복구 브랜치는 `codex/reconnect-netlify-api`입니다. 팀원은 VS Code의 프로젝트 터미널에서 다음 명령으로 받습니다. 앞 단계가 성공했을 때만 다음 단계를 실행합니다.
 
@@ -125,7 +125,7 @@ GitHub 연동 배포에서는 `codex/reconnect-netlify-api`를 배포 브랜치�
 | Base directory | `app` |
 | Build command | `node ../scripts/build-netlify.mjs` |
 | Publish directory | `dist` (Base directory 기준) |
-| 환경변수 | `HONSAL_API_BASE_URL` = `https://sender-sweet-contains-searched.trycloudflare.com` |
+| 환경변수 | `HONSAL_API_BASE_URL` = `https://villages-don-clips-archived.trycloudflare.com` |
 
 Netlify **Project configuration → Environment variables**에서 변수를 추가합니다. 범위를 선택할 수 있으면 **Builds**를 포함합니다. 주소 끝에 `/api`, 경로, 쿼리를 붙이지 않습니다. 저장한 뒤 Deploys에서 재배포합니다. 이전 안내의 빈 빌드 명령·게시 경로 `.` 대신 위 설정을 사용합니다.
 

@@ -876,8 +876,9 @@ summary:focus-visible {
 }
 
 .compare-card {
+  position: relative;
   min-height: 210px;
-  padding: 25px;
+  padding: 25px 25px 80px;
   border: 1px solid var(--border);
   border-radius: 15px;
   background: white;
@@ -892,6 +893,10 @@ summary:focus-visible {
 }
 
 .remove-compare {
+  position: absolute;
+  right: 25px;
+  bottom: 25px;
+  min-height: 36px;
   padding: 7px 11px;
   border: 1px solid var(--border);
   border-radius: 8px;

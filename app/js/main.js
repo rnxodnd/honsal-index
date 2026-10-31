@@ -12,8 +12,9 @@
   }
 
   // 비교 칸: 기본 2칸, [＋ 비교 칸 추가]로 최대 10칸까지
+  const MIN_SLOTS = 2;
   const MAX_SLOTS = 10;
-  let slots = 2;
+  let slots = MIN_SLOTS;
   const keyOf = result => `${result.location.lat},${result.location.lon}`;
 
   // 점수 높은 순 정렬 + 같은 점수는 같은 순위
@@ -68,19 +69,32 @@
           scores.append(node("dt", category.label), node("dd", category.score === null ? "미선택" : `${category.score.toFixed(1)}점`));
         });
         card.append(scores);
-        const remove = node("button", "목록에서 제거", "remove-compare");
-        remove.type = "button";
-        const key = keyOf(snapshot);
-        remove.addEventListener("click", () => {
-          const at = snapshots.findIndex(entry => keyOf(entry) === key);
-          if (at >= 0) snapshots.splice(at, 1);
-          refreshCompare();
-        });
-        card.append(remove);
       } else {
         card.classList.add("is-empty");
         card.append(node("p", "지도에서 위치를 분석한 뒤 비교 목록에 추가하세요."));
       }
+      const remove = node("button", "삭제", "remove-compare");
+      remove.type = "button";
+      remove.disabled = !snapshot && slots === MIN_SLOTS;
+      const label = snapshot?.location.name || (snapshot ? "선택한 위치" : `빈 비교 칸 ${index + 1}`);
+      remove.setAttribute("aria-label", `${label} ${slots > MIN_SLOTS ? "비교 칸 삭제" : "비교 결과 삭제"}`);
+      remove.title = slots > MIN_SLOTS
+        ? "이 비교 칸을 삭제합니다."
+        : "기본 2칸은 유지되며, 비교 결과만 삭제합니다.";
+      remove.addEventListener("click", () => {
+        if (snapshot) {
+          const key = keyOf(snapshot);
+          const at = snapshots.findIndex(entry => keyOf(entry) === key);
+          if (at < 0) return;
+          snapshots.splice(at, 1);
+        }
+        if (slots > MIN_SLOTS) slots -= 1;
+        refreshCompare();
+        const buttons = $("compareCards").querySelectorAll(".remove-compare:not(:disabled)");
+        const next = buttons[Math.min(index, buttons.length - 1)] || $("addSlotBtn");
+        next.focus({preventScroll: true});
+      });
+      card.append(remove);
       $("compareCards").append(card);
     }
     $("addSlotBtn").disabled = slots >= MAX_SLOTS;
